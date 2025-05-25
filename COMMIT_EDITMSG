@@ -1,0 +1,16 @@
+Assistant checkpoint: Fix deployment configuration and dependencies
+
+Assistant generated file changes:
+- package.json: Update root package.json for deployment
+- AIMinistryHelper/package.json: Add client build script
+Add client build script
+- .replit: Updated app configuration
+
+---
+
+User prompt:
+
+can you do all that is needed to make it deploy
+
+Replit-Commit-Author: Assistant
+Replit-Commit-Session-Id: d7fd71dc-8625-43ad-851b-186c1c653a54
