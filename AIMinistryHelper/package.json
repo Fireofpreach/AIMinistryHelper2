@@ -9,8 +9,13 @@
     "build:client": "npx vite build",
     "dev": "npx vite"
   },
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    // Add your production dependencies here, if any
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.11",
+    "vite": "^5.1.4"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC"
