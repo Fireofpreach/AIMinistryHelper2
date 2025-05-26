@@ -84,17 +84,9 @@
     @apply font-semibold tracking-tight;
   }
 
-  h1 {
-    @apply text-3xl lg:text-4xl;
-  }
-
-  h2 {
-    @apply text-2xl lg:text-3xl;
-  }
-
-  h3 {
-    @apply text-xl lg:text-2xl;
-  }
+  h1 { @apply text-3xl lg:text-4xl; }
+  h2 { @apply text-2xl lg:text-3xl; }
+  h3 { @apply text-xl lg:text-2xl; }
 }
 
 @layer components {
@@ -108,12 +100,7 @@
   }
 
   .glass-effect {
-    backdrop-filter: blur(12px);
-    background: rgba(255, 255, 255, 0.8);
-  }
-
-  .dark .glass-effect {
-    background: rgba(0, 0, 0, 0.4);
+    @apply backdrop-blur-lg bg-white/80 dark:bg-black/40;
   }
 
   .custom-scrollbar {
@@ -124,16 +111,13 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
-
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
-
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: hsl(var(--muted-foreground));
     border-radius: 3px;
   }
-
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--foreground));
   }
@@ -145,4 +129,6 @@
   .btn-gradient {
     @apply bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white;
   }
+
+  /* Optional: you can add more components */
 }
