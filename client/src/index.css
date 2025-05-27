@@ -14,29 +14,29 @@
   --muted: 210 40% 96%;
   --muted-foreground: 215.4 16.3% 46.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 84% 4.9%;
-  --border: 214.3 31.8% 91.4%; /* This enables border-border */
-  --input: 214.3 31.8% 91.4%;
+  --popover-foreground: var(--foreground);
+  --card: var(--popover);
+  --card-foreground: var(--foreground);
+  --border: 214.3 31.8% 91.4%;
+  --input: var(--border);
   --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
+  --secondary: var(--muted);
   --secondary-foreground: 222 47% 11%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 11%;
+  --accent: var(--muted);
+  --accent-foreground: var(--secondary-foreground);
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 221 83% 53%;
+  --destructive-foreground: var(--primary-foreground);
+  --ring: var(--primary);
   --radius: 0.75rem;
   --sidebar-background: 0 0% 98%;
   --sidebar-foreground: 240 5.3% 26.1%;
   --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-primary-foreground: var(--popover);
   --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-accent-foreground: var(--sidebar-primary);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
@@ -44,29 +44,29 @@
   --foreground: 210 40% 98%;
   --muted: 217.2 32.6% 17.5%;
   --muted-foreground: 215 20.2% 65.1%;
-  --popover: 222 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --card: 222 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%; /* Dark mode border */
-  --input: 217.2 32.6% 17.5%;
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --border: var(--muted);
+  --input: var(--border);
   --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
+  --primary-foreground: var(--background);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 217.2 91.2% 59.8%;
+  --destructive-foreground: var(--foreground);
+  --ring: var(--primary);
   --sidebar-background: 220 13% 18%;
   --sidebar-foreground: 220 9% 46%;
   --sidebar-primary: 220 13% 91%;
   --sidebar-primary-foreground: 220 13% 9%;
   --sidebar-accent: 216 12% 84%;
   --sidebar-accent-foreground: 220 13% 9%;
-  --sidebar-border: 217.2 32.6% 17.5%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 @layer base {
@@ -91,6 +91,12 @@
   h1 { @apply text-3xl lg:text-4xl; }
   h2 { @apply text-2xl lg:text-3xl; }
   h3 { @apply text-xl lg:text-2xl; }
+
+  /* Accessibility: Focus-visible outline */
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
@@ -100,7 +106,7 @@
   }
 
   .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 50%, hsl(221, 70%, 60%) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 40%, hsl(221, 70%, 60%) 100%);
   }
 
   .glass-effect {
@@ -111,7 +117,6 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground)) transparent;
   }
-
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -126,13 +131,18 @@
     background-color: hsl(var(--foreground));
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .custom-scrollbar {
+      scrollbar-width: auto;
+    }
+  }
+
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:scale-105;
   }
 
   .btn-gradient {
-    @apply bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white;
+    @apply bg-gradient-to-r from-primary via-blue-500 to-blue-600 hover:from-primary/90 hover:via-blue-500/90 hover:to-blue-600/90 text-white;
   }
-
-  /* Optional: you can add more components */
 }
+
