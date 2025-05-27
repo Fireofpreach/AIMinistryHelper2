@@ -2,7 +2,6 @@
   "name": "aiministryhelper2",
   "version": "1.0.0",
   "description": "AIMinistryHelper2 project",
-  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "start": "NODE_ENV=production node dist/index.js",
