@@ -1,4 +1,4 @@
-import esbuild from "esbuild";
+const esbuild = require("esbuild");
 
 async function build() {
   try {
@@ -8,6 +8,7 @@ async function build() {
       platform: "node",
       format: "cjs",
       outdir: "dist",
+      outExtension: { ".js": ".cjs" },  // <-- Add this line
       external: [
         "@babel/preset-typescript",
         "lightningcss",
