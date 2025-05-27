@@ -223,52 +223,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (id === null) return res.status(400).json({ message: "Invalid task ID" });
     const deleted = await storage.deleteTask(id);
     if (!deleted) return res.status(404).json({ message: "Task not found" });
-    res.json({ message: "Task deleted successfully" });
-  });
-
-  // --- Sermon Routes ---
-  app.get("/api/sermons", async (req, res) => {
-    const userId = parseId(req.query.userId as string);
-    if (userId === null) return res.status(400).json({ message: "Invalid user ID" });
-    const sermons = await storage.getSermons(userId);
-    res.json(sermons);
-  });
-
-  app.get("/api/sermons/:id", async (req, res) => {
-    const id = parseId(req.params.id);
-    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
-    const sermon = await storage.getSermon(id);
-    if (!sermon) return res.status(404).json({ message: "Sermon not found" });
-    res.json(sermon);
-  });
-
-  app.post("/api/sermons", async (req, res) => {
-    try {
-      const sermonData = insertSermonSchema.parse(req.body);
-      const sermon = await storage.createSermon(sermonData);
-      res.status(201).json(sermon);
-    } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.put("/api/sermons/:id", async (req, res) => {
-    const id = parseId(req.params.id);
-    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
-    try {
-      const sermonData = insertSermonSchema.partial().parse(req.body);
-      const updatedSermon = await storage.updateSermon(id, sermonData);
-      if (!updatedSermon) return res.status(404).json({ message: "Sermon not found" });
-      res.json(updatedSermon);
-    } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/sermons/:id", async (req, res) => {
-    const id = parseId(req.params.id);
-    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
-    const deleted = await storage
+    res.json({ message: "Task deleted successfully"
 
