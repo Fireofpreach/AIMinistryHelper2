@@ -8,7 +8,12 @@ async function build() {
       platform: "node",
       format: "cjs",
       outdir: "dist",
-      external: ["@babel/preset-typescript", "lightningcss"],
+      external: [
+        "@babel/preset-typescript",
+        "lightningcss",
+        "vite",
+        "@vitejs/plugin-react"
+      ],
       sourcemap: false,
       minify: false,
     });
