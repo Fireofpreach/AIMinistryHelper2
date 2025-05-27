@@ -22,6 +22,7 @@ const config: Config = {
         muted: "hsl(var(--muted))",
         "muted-foreground": "hsl(var(--muted-foreground))",
         border: "hsl(var(--border))",
+        "border-border": "hsl(var(--border))",  // 🔥 This is the fix!
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         card: "hsl(var(--card))",
@@ -46,3 +47,4 @@ const config: Config = {
 };
 
 export default config;
+

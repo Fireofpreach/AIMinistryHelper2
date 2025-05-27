@@ -1,6 +1,7 @@
 {
   "name": "aiministryhelper2",
   "version": "1.0.0",
+  "type": "module",
   "description": "AIMinistryHelper2 project",
   "main": "dist/index.js",
   "scripts": {
@@ -47,6 +48,7 @@
     "@tailwindcss/postcss": "^4.1.7",
     "@vitejs/plugin-react": "^4.5.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "esbuild": "^0.25.4",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7"
