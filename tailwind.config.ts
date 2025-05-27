@@ -1,8 +1,11 @@
+import type { Config } from "tailwindcss";
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ["./src/**/*.{html,js,ts,jsx,tsx}", "./public/**/*.html"], // Make sure Tailwind scans your files
-  darkMode: "class", // Enables dark mode using a class
+const config: Config = {
+  content: [
+    "./src/**/*.{html,js,ts,jsx,tsx}",
+    "./public/**/*.html"
+  ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -41,3 +44,5 @@ module.exports = {
   },
   plugins: [],
 };
+
+export default config;
