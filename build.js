@@ -1,4 +1,4 @@
-import esbuild from "esbuild";
+const esbuild = require("esbuild");
 
 async function build() {
   try {
@@ -6,11 +6,11 @@ async function build() {
       entryPoints: ["server/index.ts"],
       bundle: true,
       platform: "node",
-      format: "esm",
+      format: "cjs",
       outdir: "dist",
       external: ["@babel/preset-typescript", "lightningcss"],
-      sourcemap: false, // optional: add if you want source maps
-      minify: false,    // optional: add if you want minification
+      sourcemap: false,
+      minify: false,
     });
     console.log("Server build completed successfully.");
   } catch (error) {
