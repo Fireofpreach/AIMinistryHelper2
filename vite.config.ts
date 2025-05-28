@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
+import { builtinModules } from "module";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,6 +31,7 @@ async function createConfig() {
       outDir: resolve(__dirname, "dist/public"),
       emptyOutDir: true,
       rollupOptions: {
+        external: [...builtinModules, "node:events"], // <-- add this line
         output: {
           format: "esm",
         },
@@ -39,3 +41,4 @@ async function createConfig() {
 }
 
 export default createConfig();
+
