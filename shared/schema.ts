@@ -11,6 +11,8 @@ export const insertUserSchema = z.object({
   isActive: z.boolean().optional(),
   invitedBy: z.string().optional(),
 });
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = InsertUser & { id: number };
 
 // Event schema
 export const insertEventSchema = z.object({
@@ -23,6 +25,8 @@ export const insertEventSchema = z.object({
   category: z.string().optional(),
   participants: z.array(z.string()).optional(),
 });
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type Event = InsertEvent & { id: number };
 
 // Prayer Request schema
 export const insertPrayerRequestSchema = z.object({
@@ -31,6 +35,8 @@ export const insertPrayerRequestSchema = z.object({
   submittedBy: z.string(),
   submittedAt: z.date(),
 });
+export type InsertPrayerRequest = z.infer<typeof insertPrayerRequestSchema>;
+export type PrayerRequest = InsertPrayerRequest & { id: number; prayerCount?: number };
 
 // Task schema
 export const insertTaskSchema = z.object({
@@ -41,6 +47,8 @@ export const insertTaskSchema = z.object({
   priority: z.string().optional(),
   completed: z.boolean().optional(),
 });
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = InsertTask & { id: number };
 
 // Sermon schema
 export const insertSermonSchema = z.object({
@@ -51,6 +59,8 @@ export const insertSermonSchema = z.object({
   scripture: z.string().optional(),
   outline: z.string().optional(),
 });
+export type InsertSermon = z.infer<typeof insertSermonSchema>;
+export type Sermon = InsertSermon & { id: number };
 
 // Team Member schema
 export const insertTeamMemberSchema = z.object({
@@ -59,6 +69,8 @@ export const insertTeamMemberSchema = z.object({
   position: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
 });
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = InsertTeamMember & { id: number };
 
 // Resource schema
 export const insertResourceSchema = z.object({
@@ -68,3 +80,5 @@ export const insertResourceSchema = z.object({
   title: z.string(),
   description: z.string().nullable().optional(),
 });
+export type InsertResource = z.infer<typeof insertResourceSchema>;
+export type Resource = InsertResource & { id: number };
