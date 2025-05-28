@@ -5,12 +5,11 @@
   "description": "AIMinistryHelper2 project",
   "main": "dist/server/index.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"nodemon server/index.ts\"",
+    "dev": "concurrently \"vite\" \"nodemon --watch server --ext ts,json --exec node --loader ts-node/esm server/index.ts\"",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "start": "node dist/server/index.js",
-  "dev": "ts-node src/server.ts"
+    "start": "node dist/server/index.js"
   },
   "dependencies": {
     "@babel/core": "^7.27.1",
@@ -47,6 +46,8 @@
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.2.5",
+    "@swc/core": "^1.11.29",
+    "@swc/register": "^0.1.10",
     "@tailwindcss/postcss": "^4.1.7",
     "@vitejs/plugin-react": "^4.5.0",
     "autoprefixer": "^10.4.21",
@@ -56,6 +57,8 @@
     "nodemon": "^3.0.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
 }
+

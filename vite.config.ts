@@ -31,7 +31,7 @@ async function createConfig() {
       outDir: resolve(__dirname, "dist/public"),
       emptyOutDir: true,
       rollupOptions: {
-        external: [...builtinModules, "node:events"], // <-- add this line
+        external: [...builtinModules, "node:events"],
         output: {
           format: "esm",
         },
@@ -40,5 +40,5 @@ async function createConfig() {
   });
 }
 
-export default createConfig();
+export default createConfig;
 
