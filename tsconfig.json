@@ -4,7 +4,7 @@
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "noEmit": true,  // Client does not emit files, handled by Vite
+    "noEmit": true,
     "module": "ESNext",
     "strict": true,
     "lib": ["esnext", "dom", "dom.iterable"],
@@ -21,4 +21,3 @@
     }
   }
 }
-
