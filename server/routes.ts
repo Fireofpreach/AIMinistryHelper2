@@ -29,7 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/prayer-requests", async (_req, res) => {
     try {
-      const data = await storage.getPrayerRequests();
+      const data = storage.getAllPrayerRequests();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch prayer requests" });
@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/prayer-requests/:id", async (req, res) => {
     try {
-      const data = await storage.getPrayerRequest(req.params.id);
+      const data = storage.getPrayerRequestById(Number(req.params.id));
       if (!data) return notFound(res, "Prayer request");
       res.json(data);
     } catch {
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/prayer-requests", async (req, res) => {
     try {
       const input = insertPrayerRequestSchema.parse(req.body);
-      const result = await storage.addPrayerRequest(input);
+      const result = storage.createPrayerRequest(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/prayer-requests/:id", async (req, res) => {
     try {
       const input = insertPrayerRequestSchema.parse(req.body);
-      const result = await storage.updatePrayerRequest(req.params.id, input);
+      const result = storage.updatePrayerRequest(Number(req.params.id), input);
       if (!result) return notFound(res, "Prayer request");
       res.json(result);
     } catch (error) {
@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/prayer-requests/:id", async (req, res) => {
     try {
-      const result = await storage.deletePrayerRequest(req.params.id);
+      const result = storage.deletePrayerRequest(Number(req.params.id));
       if (!result) return notFound(res, "Prayer request");
       res.json({ success: true });
     } catch {
@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/events", async (_req, res) => {
     try {
-      const data = await storage.getEvents();
+      const data = storage.getAllEvents();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch events" });
@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/events/:id", async (req, res) => {
     try {
-      const data = await storage.getEvent(req.params.id);
+      const data = storage.getEventById(Number(req.params.id));
       if (!data) return notFound(res, "Event");
       res.json(data);
     } catch {
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/events", async (req, res) => {
     try {
       const input = insertEventSchema.parse(req.body);
-      const result = await storage.addEvent(input);
+      const result = storage.createEvent(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/events/:id", async (req, res) => {
     try {
       const input = insertEventSchema.parse(req.body);
-      const result = await storage.updateEvent(req.params.id, input);
+      const result = storage.updateEvent(Number(req.params.id), input);
       if (!result) return notFound(res, "Event");
       res.json(result);
     } catch (error) {
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/events/:id", async (req, res) => {
     try {
-      const result = await storage.deleteEvent(req.params.id);
+      const result = storage.deleteEvent(Number(req.params.id));
       if (!result) return notFound(res, "Event");
       res.json({ success: true });
     } catch {
@@ -131,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/sermons", async (_req, res) => {
     try {
-      const data = await storage.getSermons();
+      const data = storage.getAllSermons();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch sermons" });
@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/sermons/:id", async (req, res) => {
     try {
-      const data = await storage.getSermon(req.params.id);
+      const data = storage.getSermonById(Number(req.params.id));
       if (!data) return notFound(res, "Sermon");
       res.json(data);
     } catch {
@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/sermons", async (req, res) => {
     try {
       const input = insertSermonSchema.parse(req.body);
-      const result = await storage.addSermon(input);
+      const result = storage.createSermon(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sermons/:id", async (req, res) => {
     try {
       const input = insertSermonSchema.parse(req.body);
-      const result = await storage.updateSermon(req.params.id, input);
+      const result = storage.updateSermon(Number(req.params.id), input);
       if (!result) return notFound(res, "Sermon");
       res.json(result);
     } catch (error) {
@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/sermons/:id", async (req, res) => {
     try {
-      const result = await storage.deleteSermon(req.params.id);
+      const result = storage.deleteSermon(Number(req.params.id));
       if (!result) return notFound(res, "Sermon");
       res.json({ success: true });
     } catch {
@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/team-members", async (_req, res) => {
     try {
-      const data = await storage.getTeamMembers();
+      const data = storage.getAllTeamMembers();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch team members" });
@@ -190,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/team-members/:id", async (req, res) => {
     try {
-      const data = await storage.getTeamMember(req.params.id);
+      const data = storage.getTeamMemberById(Number(req.params.id));
       if (!data) return notFound(res, "Team member");
       res.json(data);
     } catch {
@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/team-members", async (req, res) => {
     try {
       const input = insertTeamMemberSchema.parse(req.body);
-      const result = await storage.addTeamMember(input);
+      const result = storage.createTeamMember(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/team-members/:id", async (req, res) => {
     try {
       const input = insertTeamMemberSchema.parse(req.body);
-      const result = await storage.updateTeamMember(req.params.id, input);
+      const result = storage.updateTeamMember(Number(req.params.id), input);
       if (!result) return notFound(res, "Team member");
       res.json(result);
     } catch (error) {
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/team-members/:id", async (req, res) => {
     try {
-      const result = await storage.deleteTeamMember(req.params.id);
+      const result = storage.deleteTeamMember(Number(req.params.id));
       if (!result) return notFound(res, "Team member");
       res.json({ success: true });
     } catch {
@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/tasks", async (_req, res) => {
     try {
-      const data = await storage.getTasks();
+      const data = storage.getAllTasks();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch tasks" });
@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/tasks/:id", async (req, res) => {
     try {
-      const data = await storage.getTask(req.params.id);
+      const data = storage.getTaskById(Number(req.params.id));
       if (!data) return notFound(res, "Task");
       res.json(data);
     } catch {
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tasks", async (req, res) => {
     try {
       const input = insertTaskSchema.parse(req.body);
-      const result = await storage.addTask(input);
+      const result = storage.createTask(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -261,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/tasks/:id", async (req, res) => {
     try {
       const input = insertTaskSchema.parse(req.body);
-      const result = await storage.updateTask(req.params.id, input);
+      const result = storage.updateTask(Number(req.params.id), input);
       if (!result) return notFound(res, "Task");
       res.json(result);
     } catch (error) {
@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/tasks/:id", async (req, res) => {
     try {
-      const result = await storage.deleteTask(req.params.id);
+      const result = storage.deleteTask(Number(req.params.id));
       if (!result) return notFound(res, "Task");
       res.json({ success: true });
     } catch {
@@ -284,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   //
   app.get("/api/resources", async (_req, res) => {
     try {
-      const data = await storage.getResources();
+      const data = storage.getAllResources();
       res.json(data);
     } catch {
       res.status(500).json({ message: "Failed to fetch resources" });
@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.get("/api/resources/:id", async (req, res) => {
     try {
-      const data = await storage.getResource(req.params.id);
+      const data = storage.getResourceById(Number(req.params.id));
       if (!data) return notFound(res, "Resource");
       res.json(data);
     } catch {
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/resources", async (req, res) => {
     try {
       const input = insertResourceSchema.parse(req.body);
-      const result = await storage.addResource(input);
+      const result = storage.createResource(input);
       res.status(201).json(result);
     } catch (error) {
       if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
@@ -312,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/resources/:id", async (req, res) => {
     try {
       const input = insertResourceSchema.parse(req.body);
-      const result = await storage.updateResource(req.params.id, input);
+      const result = storage.updateResource(Number(req.params.id), input);
       if (!result) return notFound(res, "Resource");
       res.json(result);
     } catch (error) {
@@ -322,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   app.delete("/api/resources/:id", async (req, res) => {
     try {
-      const result = await storage.deleteResource(req.params.id);
+      const result = storage.deleteResource(Number(req.params.id));
       if (!result) return notFound(res, "Resource");
       res.json({ success: true });
     } catch {
