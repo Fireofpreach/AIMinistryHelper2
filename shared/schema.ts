@@ -57,7 +57,7 @@ export const insertSermonSchema = z.object({
   title: z.string(),
   content: z.string().nullable().optional(),
   scripture: z.string().optional(),
-  outline: z.string().optional(),
+  outline: z.string().optional(), // outline is a string or undefined
 });
 export type InsertSermon = z.infer<typeof insertSermonSchema>;
 export type Sermon = InsertSermon & { id: number };
