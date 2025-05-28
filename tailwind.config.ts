@@ -1,13 +1,11 @@
-import type { Config } from "tailwindcss";
-
 const withOpacity =
-  (variableName: string) =>
-  ({ opacityValue }: { opacityValue?: number }) =>
+  (variableName) =>
+  ({ opacityValue }) =>
     opacityValue !== undefined
       ? `hsla(var(${variableName}), ${opacityValue})`
       : `hsl(var(${variableName}))`;
 
-const config: Config = {
+module.exports = {
   content: [
     "./client/src/**/*.{js,jsx,ts,tsx}",
     "./shared/**/*.{js,jsx,ts,tsx}",
@@ -45,9 +43,6 @@ const config: Config = {
     },
   },
   plugins: [
-    // add any plugins here, e.g. require('@tailwindcss/forms')
+    // e.g., require('@tailwindcss/forms'),
   ],
 };
-
-export default config;
-
