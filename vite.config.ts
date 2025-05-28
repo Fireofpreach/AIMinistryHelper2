@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default (async () => {
-  const plugins = [react()];
+  const plugins: PluginOption[] = [react()];
 
   if (
     process.env.NODE_ENV !== "production" &&
