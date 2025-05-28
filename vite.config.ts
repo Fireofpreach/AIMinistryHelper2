@@ -14,7 +14,12 @@ async function createConfig() {
 
   if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
     const { cartographer } = await import("@replit/vite-plugin-cartographer");
-    plugins.push(cartographer());
+    const plugin = cartographer();
+    if (Array.isArray(plugin)) {
+      plugins.push(...plugin);
+    } else {
+      plugins.push(plugin);
+    }
   }
 
   return defineConfig({
@@ -41,4 +46,3 @@ async function createConfig() {
 }
 
 export default createConfig;
-
