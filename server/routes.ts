@@ -9,7 +9,7 @@ import {
   insertSermonSchema,
   insertTeamMemberSchema,
   insertResourceSchema,
-} from "@shared/schema"; // Change to '../shared/schema.js' if you do not have path aliases configured
+} from "@shared/schema";
 import { z, type ZodError } from "zod";
 import { TheologyAggregator } from "./theologyAggregator.js";
 import bcrypt from "bcryptjs";
