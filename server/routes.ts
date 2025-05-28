@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import {
   insertUserSchema,
   insertEventSchema,
@@ -9,9 +9,9 @@ import {
   insertSermonSchema,
   insertTeamMemberSchema,
   insertResourceSchema,
-} from "@shared/schema";
+} from "@shared/schema"; // Change to '../shared/schema.js' if you do not have path aliases configured
 import { z, type ZodError } from "zod";
-import { TheologyAggregator } from "./theologyAggregator";
+import { TheologyAggregator } from "./theologyAggregator.js";
 import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // --- User Routes ---
 
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid user ID" });
 
@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(sanitizeUser(user));
   });
 
-  app.post("/api/login", async (req, res) => {
+  app.post("/api/login", async (req: Request, res: Response) => {
     try {
       const { username, password } = z
         .object({ username: z.string(), password: z.string() })
@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(sanitizeUser(user));
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser(userToSave);
       res.status(201).json(sanitizeUser(user));
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -86,14 +86,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users/invite", createUserHandler);
 
   // --- Event Routes ---
-  app.get("/api/events", async (req, res) => {
+  app.get("/api/events", async (req: Request, res: Response) => {
     const userId = parseId(req.query.userId as string);
     if (userId === null) return res.status(400).json({ message: "Invalid user ID" });
     const events = await storage.getEvents(userId);
     res.json(events);
   });
 
-  app.get("/api/events/:id", async (req, res) => {
+  app.get("/api/events/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid event ID" });
     const event = await storage.getEvent(id);
@@ -101,18 +101,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(event);
   });
 
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/events", async (req: Request, res: Response) => {
     try {
       const eventData = insertEventSchema.parse(req.body);
       const event = await storage.createEvent(eventData);
       res.status(201).json(event);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.put("/api/events/:id", async (req, res) => {
+  app.put("/api/events/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid event ID" });
     try {
@@ -121,12 +121,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedEvent) return res.status(404).json({ message: "Event not found" });
       res.json(updatedEvent);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.delete("/api/events/:id", async (req, res) => {
+  app.delete("/api/events/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid event ID" });
     const deleted = await storage.deleteEvent(id);
@@ -135,14 +135,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Prayer Request Routes ---
-  app.get("/api/prayer-requests", async (req, res) => {
+  app.get("/api/prayer-requests", async (req: Request, res: Response) => {
     const userId = parseId(req.query.userId as string);
     if (userId === null) return res.status(400).json({ message: "Invalid user ID" });
     const requests = await storage.getPrayerRequests(userId);
     res.json(requests);
   });
 
-  app.get("/api/prayer-requests/:id", async (req, res) => {
+  app.get("/api/prayer-requests/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid prayer request ID" });
     const request = await storage.getPrayerRequest(id);
@@ -150,18 +150,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(request);
   });
 
-  app.post("/api/prayer-requests", async (req, res) => {
+  app.post("/api/prayer-requests", async (req: Request, res: Response) => {
     try {
       const prayerRequestData = insertPrayerRequestSchema.parse(req.body);
       const prayerRequest = await storage.createPrayerRequest(prayerRequestData);
       res.status(201).json(prayerRequest);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.post("/api/prayer-requests/:id/pray", async (req, res) => {
+  app.post("/api/prayer-requests/:id/pray", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid prayer request ID" });
     const updated = await storage.incrementPrayerCount(id);
@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updated);
   });
 
-  app.delete("/api/prayer-requests/:id", async (req, res) => {
+  app.delete("/api/prayer-requests/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid prayer request ID" });
     const deleted = await storage.deletePrayerRequest(id);
@@ -178,14 +178,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Task Routes ---
-  app.get("/api/tasks", async (req, res) => {
+  app.get("/api/tasks", async (req: Request, res: Response) => {
     const userId = parseId(req.query.userId as string);
     if (userId === null) return res.status(400).json({ message: "Invalid user ID" });
     const tasks = await storage.getTasks(userId);
     res.json(tasks);
   });
 
-  app.get("/api/tasks/:id", async (req, res) => {
+  app.get("/api/tasks/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid task ID" });
     const task = await storage.getTask(id);
@@ -193,18 +193,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(task);
   });
 
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks", async (req: Request, res: Response) => {
     try {
       const taskData = insertTaskSchema.parse(req.body);
       const task = await storage.createTask(taskData);
       res.status(201).json(task);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.put("/api/tasks/:id", async (req, res) => {
+  app.put("/api/tasks/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid task ID" });
     try {
@@ -213,12 +213,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedTask) return res.status(404).json({ message: "Task not found" });
       res.json(updatedTask);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid task ID" });
     const deleted = await storage.deleteTask(id);
@@ -227,12 +227,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Sermon Routes ---
-  app.get("/api/sermons", async (req, res) => {
+  app.get("/api/sermons", async (_req: Request, res: Response) => {
     const sermons = await storage.getSermons();
     res.json(sermons);
   });
 
-  app.get("/api/sermons/:id", async (req, res) => {
+  app.get("/api/sermons/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
     const sermon = await storage.getSermon(id);
@@ -240,18 +240,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(sermon);
   });
 
-  app.post("/api/sermons", async (req, res) => {
+  app.post("/api/sermons", async (req: Request, res: Response) => {
     try {
       const sermonData = insertSermonSchema.parse(req.body);
       const sermon = await storage.createSermon(sermonData);
       res.status(201).json(sermon);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.put("/api/sermons/:id", async (req, res) => {
+  app.put("/api/sermons/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
     try {
@@ -260,12 +260,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedSermon) return res.status(404).json({ message: "Sermon not found" });
       res.json(updatedSermon);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.delete("/api/sermons/:id", async (req, res) => {
+  app.delete("/api/sermons/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
     const deleted = await storage.deleteSermon(id);
@@ -274,12 +274,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Team Member Routes ---
-  app.get("/api/team-members", async (req, res) => {
+  app.get("/api/team-members", async (_req: Request, res: Response) => {
     const teamMembers = await storage.getTeamMembers();
     res.json(teamMembers);
   });
 
-  app.get("/api/team-members/:id", async (req, res) => {
+  app.get("/api/team-members/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
     const member = await storage.getTeamMember(id);
@@ -287,18 +287,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(member);
   });
 
-  app.post("/api/team-members", async (req, res) => {
+  app.post("/api/team-members", async (req: Request, res: Response) => {
     try {
       const memberData = insertTeamMemberSchema.parse(req.body);
       const member = await storage.createTeamMember(memberData);
       res.status(201).json(member);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.put("/api/team-members/:id", async (req, res) => {
+  app.put("/api/team-members/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
     try {
@@ -307,12 +307,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedMember) return res.status(404).json({ message: "Team member not found" });
       res.json(updatedMember);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.delete("/api/team-members/:id", async (req, res) => {
+  app.delete("/api/team-members/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
     const deleted = await storage.deleteTeamMember(id);
@@ -321,12 +321,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Resource Routes ---
-  app.get("/api/resources", async (req, res) => {
+  app.get("/api/resources", async (_req: Request, res: Response) => {
     const resources = await storage.getResources();
     res.json(resources);
   });
 
-  app.get("/api/resources/:id", async (req, res) => {
+  app.get("/api/resources/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
     const resource = await storage.getResource(id);
@@ -334,18 +334,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(resource);
   });
 
-  app.post("/api/resources", async (req, res) => {
+  app.post("/api/resources", async (req: Request, res: Response) => {
     try {
       const resourceData = insertResourceSchema.parse(req.body);
       const resource = await storage.createResource(resourceData);
       res.status(201).json(resource);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.put("/api/resources/:id", async (req, res) => {
+  app.put("/api/resources/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
     try {
@@ -354,12 +354,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedResource) return res.status(404).json({ message: "Resource not found" });
       res.json(updatedResource);
     } catch (error) {
-      if (error instanceof ZodError) return handleZodError(res, error);
+      if (error instanceof z.ZodError) return handleZodError(res, error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.delete("/api/resources/:id", async (req, res) => {
+  app.delete("/api/resources/:id", async (req: Request, res: Response) => {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
     const deleted = await storage.deleteResource(id);
@@ -368,7 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // --- Theology Aggregator Route ---
-  app.get("/api/theology-aggregate", async (req, res) => {
+  app.get("/api/theology-aggregate", async (_req: Request, res: Response) => {
     try {
       const aggregator = new TheologyAggregator();
       const result = await aggregator.aggregate();
@@ -380,4 +380,3 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   return httpServer;
 }
-
