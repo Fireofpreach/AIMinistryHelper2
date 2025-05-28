@@ -1,49 +1,52 @@
 import type { Config } from "tailwindcss";
 
+const withOpacity =
+  (variableName: string) =>
+  ({ opacityValue }: { opacityValue?: number }) =>
+    opacityValue !== undefined
+      ? `hsla(var(${variableName}), ${opacityValue})`
+      : `hsl(var(${variableName}))`;
+
 const config: Config = {
   content: [
-    "./src/**/*.{html,js,ts,jsx,tsx}",
-    "./public/**/*.html"
+    "./client/src/**/*.{js,jsx,ts,tsx}",
+    "./shared/**/*.{js,jsx,ts,tsx}",
+    "./server/**/*.{js,ts}",
   ],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        primary: "hsl(var(--primary))",
-        "primary-foreground": "hsl(var(--primary-foreground))",
-        secondary: "hsl(var(--secondary))",
-        "secondary-foreground": "hsl(var(--secondary-foreground))",
-        accent: "hsl(var(--accent))",
-        "accent-foreground": "hsl(var(--accent-foreground))",
-        destructive: "hsl(var(--destructive))",
-        "destructive-foreground": "hsl(var(--destructive-foreground))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        muted: "hsl(var(--muted))",
-        "muted-foreground": "hsl(var(--muted-foreground))",
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        card: "hsl(var(--card))",
-        "card-foreground": "hsl(var(--card-foreground))",
-        sidebar_background: "hsl(var(--sidebar-background))",
-        sidebar_foreground: "hsl(var(--sidebar-foreground))",
-        sidebar_primary: "hsl(var(--sidebar-primary))",
-        sidebar_primary_foreground: "hsl(var(--sidebar-primary-foreground))",
-        sidebar_accent: "hsl(var(--sidebar-accent))",
-        sidebar_accent_foreground: "hsl(var(--sidebar-accent-foreground))",
-        sidebar_border: "hsl(var(--sidebar-border))",
-        sidebar_ring: "hsl(var(--sidebar-ring))",
-      },
-      borderColor: {
-        border: "hsl(var(--border))",
-      },
-      borderRadius: {
-        DEFAULT: "var(--radius)",
+        primary: withOpacity("--primary"),
+        "primary-foreground": withOpacity("--primary-foreground"),
+        secondary: withOpacity("--secondary"),
+        "secondary-foreground": withOpacity("--secondary-foreground"),
+        accent: withOpacity("--accent"),
+        "accent-foreground": withOpacity("--accent-foreground"),
+        destructive: withOpacity("--destructive"),
+        "destructive-foreground": withOpacity("--destructive-foreground"),
+        background: withOpacity("--background"),
+        foreground: withOpacity("--foreground"),
+        muted: withOpacity("--muted"),
+        "muted-foreground": withOpacity("--muted-foreground"),
+        border: withOpacity("--border"),
+        input: withOpacity("--input"),
+        ring: withOpacity("--ring"),
+        card: withOpacity("--card"),
+        "card-foreground": withOpacity("--card-foreground"),
+        sidebar_background: withOpacity("--sidebar-background"),
+        sidebar_foreground: withOpacity("--sidebar-foreground"),
+        sidebar_primary: withOpacity("--sidebar-primary"),
+        sidebar_primary_foreground: withOpacity("--sidebar-primary-foreground"),
+        sidebar_accent: withOpacity("--sidebar-accent"),
+        sidebar_accent_foreground: withOpacity("--sidebar-accent-foreground"),
+        sidebar_border: withOpacity("--sidebar-border"),
+        sidebar_ring: withOpacity("--sidebar-ring"),
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // add any plugins here, e.g. require('@tailwindcss/forms')
+  ],
 };
 
 export default config;

@@ -218,13 +218,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-app.delete("/api/tasks/:id", async (req, res) => {
-  const id = parseId(req.params.id);
-  if (id === null) return res.status(400).json({ message: "Invalid task ID" });
-  const deleted = await storage.deleteTask(id);
-  if (!deleted) return res.status(404).json({ message: "Task not found" });
-  res.json({ message: "Task deleted successfully" });
-});
+  app.delete("/api/tasks/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid task ID" });
+    const deleted = await storage.deleteTask(id);
+    if (!deleted) return res.status(404).json({ message: "Task not found" });
+    res.json({ message: "Task deleted successfully" });
+  });
 
-return httpServer;
+  // --- Sermon Routes ---
+  app.get("/api/sermons", async (req, res) => {
+    const sermons = await storage.getSermons();
+    res.json(sermons);
+  });
+
+  app.get("/api/sermons/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
+    const sermon = await storage.getSermon(id);
+    if (!sermon) return res.status(404).json({ message: "Sermon not found" });
+    res.json(sermon);
+  });
+
+  app.post("/api/sermons", async (req, res) => {
+    try {
+      const sermonData = insertSermonSchema.parse(req.body);
+      const sermon = await storage.createSermon(sermonData);
+      res.status(201).json(sermon);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/sermons/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
+    try {
+      const sermonData = insertSermonSchema.partial().parse(req.body);
+      const updatedSermon = await storage.updateSermon(id, sermonData);
+      if (!updatedSermon) return res.status(404).json({ message: "Sermon not found" });
+      res.json(updatedSermon);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/sermons/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid sermon ID" });
+    const deleted = await storage.deleteSermon(id);
+    if (!deleted) return res.status(404).json({ message: "Sermon not found" });
+    res.json({ message: "Sermon deleted successfully" });
+  });
+
+  // --- Team Member Routes ---
+  app.get("/api/team-members", async (req, res) => {
+    const teamMembers = await storage.getTeamMembers();
+    res.json(teamMembers);
+  });
+
+  app.get("/api/team-members/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
+    const member = await storage.getTeamMember(id);
+    if (!member) return res.status(404).json({ message: "Team member not found" });
+    res.json(member);
+  });
+
+  app.post("/api/team-members", async (req, res) => {
+    try {
+      const memberData = insertTeamMemberSchema.parse(req.body);
+      const member = await storage.createTeamMember(memberData);
+      res.status(201).json(member);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/team-members/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
+    try {
+      const memberData = insertTeamMemberSchema.partial().parse(req.body);
+      const updatedMember = await storage.updateTeamMember(id, memberData);
+      if (!updatedMember) return res.status(404).json({ message: "Team member not found" });
+      res.json(updatedMember);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/team-members/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid team member ID" });
+    const deleted = await storage.deleteTeamMember(id);
+    if (!deleted) return res.status(404).json({ message: "Team member not found" });
+    res.json({ message: "Team member deleted successfully" });
+  });
+
+  // --- Resource Routes ---
+  app.get("/api/resources", async (req, res) => {
+    const resources = await storage.getResources();
+    res.json(resources);
+  });
+
+  app.get("/api/resources/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
+    const resource = await storage.getResource(id);
+    if (!resource) return res.status(404).json({ message: "Resource not found" });
+    res.json(resource);
+  });
+
+  app.post("/api/resources", async (req, res) => {
+    try {
+      const resourceData = insertResourceSchema.parse(req.body);
+      const resource = await storage.createResource(resourceData);
+      res.status(201).json(resource);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/resources/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
+    try {
+      const resourceData = insertResourceSchema.partial().parse(req.body);
+      const updatedResource = await storage.updateResource(id, resourceData);
+      if (!updatedResource) return res.status(404).json({ message: "Resource not found" });
+      res.json(updatedResource);
+    } catch (error) {
+      if (error instanceof ZodError) return handleZodError(res, error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/resources/:id", async (req, res) => {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ message: "Invalid resource ID" });
+    const deleted = await storage.deleteResource(id);
+    if (!deleted) return res.status(404).json({ message: "Resource not found" });
+    res.json({ message: "Resource deleted successfully" });
+  });
+
+  // --- Theology Aggregator Route ---
+  app.get("/api/theology-aggregate", async (req, res) => {
+    try {
+      const aggregator = new TheologyAggregator();
+      const result = await aggregator.aggregate();
+      res.json(result);
+    } catch {
+      res.status(500).json({ message: "Failed to aggregate theology data" });
+    }
+  });
+
+  return httpServer;
 }
+

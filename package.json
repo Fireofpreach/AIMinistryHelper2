@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "description": "AIMinistryHelper2 project",
-  "main": "dist/server/index.js",  // Adjusted main entry for server
+  "main": "dist/server/index.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"nodemon server/index.ts\"",  // Run dev server and Vite
-    "build": "npm run build:client && npm run build:server",  // Build both client and server
-    "build:client": "vite build",  // Vite builds React frontend
-    "build:server": "tsc -p tsconfig.server.json",  // Compiles server with TypeScript
-    "start": "node dist/server/index.js"  // Runs compiled server
+    "dev": "concurrently \"vite\" \"nodemon server/index.ts\"",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "tsc -p tsconfig.server.json",
+    "start": "node dist/server/index.js",
+  "dev": "ts-node src/server.ts"
   },
   "dependencies": {
     "@babel/core": "^7.27.1",
@@ -49,13 +50,12 @@
     "@tailwindcss/postcss": "^4.1.7",
     "@vitejs/plugin-react": "^4.5.0",
     "autoprefixer": "^10.4.21",
-    "concurrently": "^8.0.1",  // For running multiple commands in dev
+    "concurrently": "^8.0.1",
     "cross-env": "^7.0.3",
     "esbuild": "^0.25.4",
-    "nodemon": "^3.0.1",  // For hot reload of server
+    "nodemon": "^3.0.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7",
-    "typescript": "^5.3.3"  // TypeScript for server build
+    "typescript": "^5.8.3"
   }
 }
-
