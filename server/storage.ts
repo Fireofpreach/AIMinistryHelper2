@@ -8,35 +8,115 @@ import {
   type Resource, type InsertResource
 } from "@shared/schema";
 
-// ...rest of your IStorage and MemStorage class...
+// Example in-memory storage implementation
+class MemStorage {
+  private users: User[] = [];
+  private events: Event[] = [];
+  private prayerRequests: PrayerRequest[] = [];
+  private tasks: Task[] = [];
+  private sermons: Sermon[] = [];
+  private teamMembers: TeamMember[] = [];
+  private resources: Resource[] = [];
 
-// When creating a sermon with an outline, string-ify any object:
-this.createSermon({
-  title: "Finding Peace in Uncertain Times",
-  scripture: "Matthew 11:28-30",
-  content: "Come to me, all you who are weary and burdened, and I will give you rest...",
-  outline: JSON.stringify({
-    introduction: "The challenge of finding peace in today's world",
-    points: [
-      "The source of true peace",
-      "Practical steps to experiencing God's peace",
-      "Sharing peace with others"
-    ],
-    conclusion: "Living in God's peace daily"
-  }),
-  date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5),
-  userId: 1
-});
+  private userId = 1;
+  private eventId = 1;
+  private prayerRequestId = 1;
+  private taskId = 1;
+  private sermonId = 1;
+  private teamMemberId = 1;
+  private resourceId = 1;
 
-// When setting fields that can be undefined, use ?? undefined (not null):
-const user: User = {
-  ...insertUser,
-  id,
-  isAdmin: insertUser.isAdmin || false,
-  isActive: insertUser.isActive !== false,
-  invitedBy: insertUser.invitedBy ?? undefined,
-  church: insertUser.church ?? undefined,
-  profileImage: insertUser.profileImage ?? undefined
-};
+  createUser(insertUser: InsertUser): User {
+    const user: User = {
+      ...insertUser,
+      id: this.userId++,
+      isAdmin: insertUser.isAdmin || false,
+      isActive: insertUser.isActive !== false,
+      invitedBy: insertUser.invitedBy ?? undefined,
+      church: insertUser.church ?? undefined,
+      profileImage: insertUser.profileImage ?? undefined
+    };
+    this.users.push(user);
+    return user;
+  }
 
-// Similarly, update other entity creation code to avoid assigning null where only undefined is allowed.
+  createEvent(insertEvent: InsertEvent): Event {
+    const event: Event = {
+      ...insertEvent,
+      id: this.eventId++,
+      description: insertEvent.description ?? undefined,
+      location: insertEvent.location ?? undefined,
+      endTime: insertEvent.endTime ?? undefined,
+      category: insertEvent.category ?? undefined,
+      participants: insertEvent.participants ?? [],
+    };
+    this.events.push(event);
+    return event;
+  }
+
+  createPrayerRequest(insertPrayerRequest: InsertPrayerRequest): PrayerRequest {
+    const prayerRequest: PrayerRequest = {
+      ...insertPrayerRequest,
+      id: this.prayerRequestId++,
+      prayerCount: 0
+    };
+    this.prayerRequests.push(prayerRequest);
+    return prayerRequest;
+  }
+
+  createTask(insertTask: InsertTask): Task {
+    const task: Task = {
+      ...insertTask,
+      id: this.taskId++,
+      description: insertTask.description ?? undefined,
+      dueDate: insertTask.dueDate ?? undefined,
+      priority: insertTask.priority ?? undefined,
+      completed: insertTask.completed ?? false
+    };
+    this.tasks.push(task);
+    return task;
+  }
+
+  createSermon(insertSermon: InsertSermon): Sermon {
+    const sermon: Sermon = {
+      ...insertSermon,
+      id: this.sermonId++,
+      content: insertSermon.content ?? undefined,
+      date: insertSermon.date ?? undefined,
+      scripture: insertSermon.scripture ?? undefined,
+      outline: typeof insertSermon.outline === "object"
+        ? JSON.stringify(insertSermon.outline)
+        : insertSermon.outline ?? undefined
+    };
+    this.sermons.push(sermon);
+    return sermon;
+  }
+
+  createTeamMember(insertTeamMember: InsertTeamMember): TeamMember {
+    const teamMember: TeamMember = {
+      ...insertTeamMember,
+      id: this.teamMemberId++,
+      position: insertTeamMember.position ?? undefined,
+      image: insertTeamMember.image ?? undefined
+    };
+    this.teamMembers.push(teamMember);
+    return teamMember;
+  }
+
+  createResource(insertResource: InsertResource): Resource {
+    const resource: Resource = {
+      ...insertResource,
+      id: this.resourceId++,
+      type: insertResource.type ?? undefined,
+      url: insertResource.url ?? undefined,
+      description: insertResource.description ?? undefined
+    };
+    this.resources.push(resource);
+    return resource;
+  }
+
+  // Add any other methods you need, e.g., getAllUsers(), findEventById(), etc.
+}
+
+// Export as named export (matches your routes file)
+export const storage = new MemStorage();
