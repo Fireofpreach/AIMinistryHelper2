@@ -1,144 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+const withOpacity =
+  (variableName) =>
+  ({ opacityValue }) =>
+    opacityValue !== undefined
+      ? `hsla(var(${variableName}), ${opacityValue})`
+      : `hsl(var(${variableName}))`;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: 0 0% 99%;
-  --foreground: 222 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: var(--foreground);
-  --card: var(--popover);
-  --card-foreground: var(--foreground);
-  --border: 214.3 31.8% 91.4%;
-  --input: var(--border);
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: var(--muted);
-  --secondary-foreground: 222 47% 11%;
-  --accent: var(--muted);
-  --accent-foreground: var(--secondary-foreground);
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: var(--primary-foreground);
-  --ring: var(--primary);
-  --radius: 0.75rem;
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: var(--popover);
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: var(--sidebar-primary);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
-  --gradient-accent: 221 70% 60%;
-}
-
-.dark {
-  --background: 222 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --popover: var(--background);
-  --popover-foreground: var(--foreground);
-  --card: var(--background);
-  --card-foreground: var(--foreground);
-  --border: var(--muted);
-  --input: var(--border);
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: var(--background);
-  --secondary: var(--muted);
-  --secondary-foreground: var(--foreground);
-  --accent: var(--muted);
-  --accent-foreground: var(--foreground);
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: var(--foreground);
-  --ring: var(--primary);
-  --sidebar-background: 220 13% 18%;
-  --sidebar-foreground: 220 9% 46%;
-  --sidebar-primary: 220 13% 91%;
-  --sidebar-primary-foreground: 220 13% 9%;
-  --sidebar-accent: 216 12% 84%;
-  --sidebar-accent-foreground: 220 13% 9%;
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
-}
-
-@layer base {
-  * {
-    border: 1px solid hsl(var(--border)); /* Replace with @apply if Tailwind config includes border-border */
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply antialiased bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-  }
-
-  h1 { @apply text-3xl lg:text-4xl; }
-  h2 { @apply text-2xl lg:text-3xl; }
-  h3 { @apply text-xl lg:text-2xl; }
-
-  :focus-visible {
-    outline: 2px solid hsl(var(--primary));
-    outline-offset: 2px;
-  }
-}
-
-@layer components {
-  .scripture {
-    font-family: Georgia, 'Times New Roman', serif;
-    @apply text-slate-700 dark:text-slate-300 leading-relaxed;
-  }
-
-  .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 40%, hsl(var(--gradient-accent)) 100%);
-  }
-
-  .glass-effect {
-    @apply backdrop-blur-lg bg-white/80 dark:bg-black/40;
-  }
-
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground)) transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground));
-    border-radius: 3px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--foreground));
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .custom-scrollbar {
-      scrollbar-width: auto;
-    }
-  }
-
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:scale-105;
-  }
-
-  .btn-gradient {
-    @apply bg-gradient-to-r from-primary via-blue-500 to-blue-600 hover:from-primary/90 hover:via-blue-500/90 hover:to-blue-600/90 text-white;
-  }
-}
-
+module.exports = {
+  content: [
+    "./client/src/**/*.{js,jsx,ts,tsx}",
+    "./shared/**/*.{js,jsx,ts,tsx}",
+    "./server/**/*.{js,ts}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        background: withOpacity("--background"),
+        foreground: withOpacity("--foreground"),
+        muted: withOpacity("--muted"),
+        "muted-foreground": withOpacity("--muted-foreground"),
+        popover: withOpacity("--popover"),
+        "popover-foreground": withOpacity("--popover-foreground"),
+        card: withOpacity("--card"),
+        "card-foreground": withOpacity("--card-foreground"),
+        border: withOpacity("--border"),
+        input: withOpacity("--input"),
+        primary: withOpacity("--primary"),
+        "primary-foreground": withOpacity("--primary-foreground"),
+        secondary: withOpacity("--secondary"),
+        "secondary-foreground": withOpacity("--secondary-foreground"),
+        accent: withOpacity("--accent"),
+        "accent-foreground": withOpacity("--accent-foreground"),
+        destructive: withOpacity("--destructive"),
+        "destructive-foreground": withOpacity("--destructive-foreground"),
+        ring: withOpacity("--ring"),
+        "sidebar-background": withOpacity("--sidebar-background"),
+        "sidebar-foreground": withOpacity("--sidebar-foreground"),
+        "sidebar-primary": withOpacity("--sidebar-primary"),
+        "sidebar-primary-foreground": withOpacity("--sidebar-primary-foreground"),
+        "sidebar-accent": withOpacity("--sidebar-accent"),
+        "sidebar-accent-foreground": withOpacity("--sidebar-accent-foreground"),
+        "sidebar-border": withOpacity("--sidebar-border"),
+        "sidebar-ring": withOpacity("--sidebar-ring"),
+        "gradient-accent": withOpacity("--gradient-accent"),
+      },
+      borderRadius: {
+        DEFAULT: "var(--radius)",
+      },
+    },
+  },
+  plugins: [],
+  // Uncomment the next line if you use dynamic class names for bg-background or similar
+  // safelist: ["bg-background", "text-foreground", "bg-primary", "bg-card", "bg-popover"],
+};
