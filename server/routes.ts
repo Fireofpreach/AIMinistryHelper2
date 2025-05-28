@@ -12,6 +12,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { TheologyAggregator } from "./theologyAggregator.js";
+import { DoctrineComparer } from "./doctrineComparer.js";
+import { ApologeticsResponder } from "./apologeticsResponder.js";
 import bcrypt from "bcryptjs";
 
 // Helper: sends 404 if not found
@@ -329,9 +331,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   //
+  // --- Doctrine Comparison Endpoint ---
+  //
+  app.get("/api/compare-doctrines", async (req, res) => {
+    try {
+      const { doctrine1, doctrine2 } = req.query;
+      if (!doctrine1 || !doctrine2) {
+        return res.status(400).json({ message: "Please provide two doctrines to compare." });
+      }
+      const result = await DoctrineComparer.compare(doctrine1 as string, doctrine2 as string);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to compare doctrines." });
+    }
+  });
+
+  //
+  // --- Interactive Apologetics Q&A Endpoint ---
+  //
+  app.post("/api/apologetics", async (req, res) => {
+    try {
+      const { question } = req.body;
+      if (!question) {
+        return res.status(400).json({ message: "No question provided." });
+      }
+      const answer = await ApologeticsResponder.getAnswer(question);
+      res.json({ answer });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get apologetics answer." });
+    }
+  });
+
+  //
   // --- Theology Aggregator Route ---
   //
-  app.get("/api/theology-aggregate", async (req, res) => {
+  app.get("/api/theology-aggregate", async (req: Request, res: Response) => {
     try {
       const query = (req.query.q as string) || "John 3:16";
       const result = await TheologyAggregator.getAggregatedAnswer(query);
