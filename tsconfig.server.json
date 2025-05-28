@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "types": ["node"],
     "outDir": "dist/server",
-    "rootDir": "."
+    "rootDir": "server"
   },
   "include": ["server/index.ts", "server/**/*.ts", "shared/**/*.ts"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"]
