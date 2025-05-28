@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "AIMinistryHelper2 project",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "scripts": {
-    "start": "NODE_ENV=production node dist/index.cjs",
+    "start": "cross-env NODE_ENV=production node dist/index.mjs",
     "build": "node build.js && npm run build:client",
     "build:client": "vite build",
     "dev": "vite"

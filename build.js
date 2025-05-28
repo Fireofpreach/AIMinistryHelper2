@@ -1,4 +1,5 @@
-const esbuild = require("esbuild");
+import esbuild from "esbuild";
+import path from "path";
 
 async function build() {
   try {
@@ -6,9 +7,9 @@ async function build() {
       entryPoints: ["server/index.ts"],
       bundle: true,
       platform: "node",
-      format: "cjs",
+      format: "esm",  // ESM output
       outdir: "dist",
-      outExtension: { ".js": ".cjs" },  // <-- Add this line
+      outExtension: { ".js": ".mjs" },
       external: [
         "@babel/preset-typescript",
         "lightningcss",
@@ -26,3 +27,4 @@ async function build() {
 }
 
 build();
+
