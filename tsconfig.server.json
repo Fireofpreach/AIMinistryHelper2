@@ -3,10 +3,10 @@
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist/server",
-    "rootDir": "server",
+    "rootDir": ".",
     "noEmit": false,
     "strict": true,
     "esModuleInterop": true,
@@ -18,4 +18,3 @@
     "types": ["node"]
   }
 }
-
