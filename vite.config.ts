@@ -8,9 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function createConfig() {
-  const plugins = [
-    react(),
-  ];
+  const plugins = [react()];
 
   if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
     const { cartographer } = await import("@replit/vite-plugin-cartographer");
