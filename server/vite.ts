@@ -23,8 +23,8 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  // Dynamically import vite.config.ts as ESM
-  const viteConfigModule = await import("../vite.config");
+  // Dynamically import vite.config.js as ESM (make sure vite.config.js exists in your built output)
+  const viteConfigModule = await import("../vite.config.js");
   const viteConfig = viteConfigModule.default;
 
   const serverOptions = {
@@ -91,4 +91,3 @@ export function serveStatic(app: Express) {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
-
