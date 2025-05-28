@@ -7,10 +7,13 @@ import { builtinModules } from "module";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-async function createConfig() {
+export default (async () => {
   const plugins = [react()];
 
-  if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    typeof process.env.REPL_ID !== "undefined"
+  ) {
     const { cartographer } = await import("@replit/vite-plugin-cartographer");
     const plugin = cartographer();
     if (Array.isArray(plugin)) {
@@ -41,6 +44,4 @@ async function createConfig() {
       },
     },
   });
-}
-
-export default createConfig;
+})();
