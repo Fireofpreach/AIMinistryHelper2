@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
+import path from "path";
 
 async function main() {
   try {
@@ -10,7 +11,7 @@ async function main() {
 
     app.use((req: Request, res: Response, next: NextFunction) => {
       const start = Date.now();
-      const path = req.path;
+      const pathReq = req.path;
       let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
       const originalResJson = res.json;
@@ -21,8 +22,8 @@ async function main() {
 
       res.on("finish", () => {
         const duration = Date.now() - start;
-        if (path.startsWith("/api")) {
-          let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+        if (pathReq.startsWith("/api")) {
+          let logLine = `${req.method} ${pathReq} ${res.statusCode} in ${duration}ms`;
           if (capturedJsonResponse) {
             logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
           }
@@ -53,7 +54,9 @@ async function main() {
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
-      serveStatic(app);
+      // Serve static files from the correct absolute path
+      const publicDir = path.join(process.cwd(), "dist/public");
+      app.use(express.static(publicDir));
     }
 
     const port = 5000;
