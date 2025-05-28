@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 
 async function main() {
   try {
@@ -8,7 +8,7 @@ async function main() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
 
-    app.use((req, res, next) => {
+    app.use((req: Request, res: Response, next: NextFunction) => {
       const start = Date.now();
       const path = req.path;
       let capturedJsonResponse: Record<string, any> | undefined = undefined;
