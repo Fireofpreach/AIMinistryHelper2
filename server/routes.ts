@@ -9,24 +9,66 @@ import {
   insertSermonSchema,
   insertTeamMemberSchema,
   insertResourceSchema,
-} from "@shared/schema"; // <-- FIXED: Use path alias!
+} from "@shared/schema";
 import { z } from "zod";
 import { TheologyAggregator } from "./theologyAggregator.js";
 import { DoctrineComparer } from "./doctrineComparer.js";
 import { ApologeticsResponder } from "./apologeticsResponder.js";
-import bcrypt from "bcryptjs";
+import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
 
-// Helper: sends 404 if not found
 function notFound(res: Response, resource: string) {
   res.status(404).json({ message: `${resource} not found` });
 }
 
+// --- In-memory user store for demo/auth step 1 (replace with DB later)
+const users: { id: number; email: string; password: string; role?: string }[] = [];
+let nextUserId = 1;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  //
+  // --- Auth Endpoints ---
+  app.post("/api/register", async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: "Email and password required." });
+
+    if (users.find(u => u.email === email)) return res.status(409).json({ message: "Email already exists." });
+
+    const hashed = await hashPassword(password);
+    const user = { id: nextUserId++, email, password: hashed, role: "member" };
+    users.push(user);
+
+    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  });
+
+  app.post("/api/login", async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: "Email and password required." });
+
+    const user = users.find(u => u.email === email);
+    if (!user) return res.status(401).json({ message: "Invalid credentials." });
+
+    const match = await comparePassword(password, user.password);
+    if (!match) return res.status(401).json({ message: "Invalid credentials." });
+
+    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  });
+
+  // --- Example protected route (for testing auth) ---
+  app.get("/api/protected", (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ message: "Missing token." });
+
+    const token = authHeader.replace("Bearer ", "");
+    const user = verifyToken(token);
+    if (!user) return res.status(401).json({ message: "Invalid or expired token." });
+
+    res.json({ message: "You are authenticated!", user });
+  });
+
   // --- Prayer Requests ---
-  //
   app.get("/api/prayer-requests", async (_req, res) => {
     try {
       const data = storage.getAllPrayerRequests();
@@ -75,9 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Events ---
-  //
   app.get("/api/events", async (_req, res) => {
     try {
       const data = storage.getAllEvents();
@@ -126,9 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Sermons ---
-  //
   app.get("/api/sermons", async (_req, res) => {
     try {
       const data = storage.getAllSermons();
@@ -177,9 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Team Members ---
-  //
   app.get("/api/team-members", async (_req, res) => {
     try {
       const data = storage.getAllTeamMembers();
@@ -228,9 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Tasks ---
-  //
   app.get("/api/tasks", async (_req, res) => {
     try {
       const data = storage.getAllTasks();
@@ -279,9 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Resources ---
-  //
   app.get("/api/resources", async (_req, res) => {
     try {
       const data = storage.getAllResources();
@@ -330,9 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Doctrine Comparison Endpoint ---
-  //
   app.get("/api/compare-doctrines", async (req, res) => {
     try {
       const { doctrine1, doctrine2 } = req.query;
@@ -346,9 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Interactive Apologetics Q&A Endpoint ---
-  //
   app.post("/api/apologetics", async (req, res) => {
     try {
       const { question } = req.body;
@@ -362,9 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  //
   // --- Theology Aggregator Route ---
-  //
   app.get("/api/theology-aggregate", async (req: Request, res: Response) => {
     try {
       const query = (req.query.q as string) || "John 3:16";
