@@ -2,8 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/shared",
-    "rootDir": ".",
-    "module": "commonjs",
+    "module": "esnext",
     "target": "ES2020",
     "esModuleInterop": true,
     "resolveJsonModule": true,
