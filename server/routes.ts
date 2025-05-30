@@ -1,405 +1,226 @@
-import express, { type Express, type Request, type Response } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage.js";
-import {
-  insertUserSchema,
-  insertEventSchema,
-  insertPrayerRequestSchema,
-  insertTaskSchema,
-  insertSermonSchema,
-  insertTeamMemberSchema,
-  insertResourceSchema,
-} from "@shared/schema";
-import { z } from "zod";
-import { TheologyAggregator } from "./theologyAggregator.js";
-import { DoctrineComparer } from "./doctrineComparer.js";
-import { ApologeticsResponder } from "./apologeticsResponder.js";
-import { hashPassword, comparePassword, generateToken, verifyToken } from "./auth.js";
+import express from "express";
+import { prisma } from "./prisma.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-function notFound(res: Response, resource: string) {
-  res.status(404).json({ message: `${resource} not found` });
+const router = express.Router();
+
+// JWT Auth helpers
+const hashPassword = (pw: string) => bcrypt.hash(pw, 10);
+const comparePassword = (pw: string, hash: string) => bcrypt.compare(pw, hash);
+const generateToken = (payload: { id: number; email: string; role: string }) =>
+  jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: "7d" });
+
+// Dummy auth middleware (replace with real one!)
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ message: "Missing auth header" });
+  try {
+    const token = auth.replace("Bearer ", "");
+    req.user = jwt.verify(token, process.env.JWT_SECRET as string);
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
 }
 
-// --- In-memory user store for demo/auth step 1 (replace with DB later)
-const users: { id: number; email: string; password: string; role?: string }[] = [];
-let nextUserId = 1;
+// --- Auth routes ---
+router.post("/api/register", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ message: "Email and password required." });
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  const httpServer = createServer(app);
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing)
+    return res.status(409).json({ message: "Email already exists." });
 
-  // --- Auth Endpoints ---
-  app.post("/api/register", async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "Email and password required." });
-
-    if (users.find(u => u.email === email)) return res.status(409).json({ message: "Email already exists." });
-
-    const hashed = await hashPassword(password);
-    const user = { id: nextUserId++, email, password: hashed, role: "member" };
-    users.push(user);
-
-    const token = generateToken({ id: user.id, email: user.email, role: user.role });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+  const hashed = await hashPassword(password);
+  const user = await prisma.user.create({
+    data: { email, password: hashed, role: "member" },
+    select: { id: true, email: true, role: true }
   });
 
-  app.post("/api/login", async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "Email and password required." });
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
+  res.json({ token, user });
+});
 
-    const user = users.find(u => u.email === email);
-    if (!user) return res.status(401).json({ message: "Invalid credentials." });
+router.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password)
+    return res.status(400).json({ message: "Email and password required." });
 
-    const match = await comparePassword(password, user.password);
-    if (!match) return res.status(401).json({ message: "Invalid credentials." });
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user)
+    return res.status(401).json({ message: "Invalid credentials." });
 
-    const token = generateToken({ id: user.id, email: user.email, role: user.role });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
-  });
+  const match = await comparePassword(password, user.password);
+  if (!match)
+    return res.status(401).json({ message: "Invalid credentials." });
 
-  // --- Example protected route (for testing auth) ---
-  app.get("/api/protected", (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ message: "Missing token." });
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
+  res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+});
 
-    const token = authHeader.replace("Bearer ", "");
-    const user = verifyToken(token);
-    if (!user) return res.status(401).json({ message: "Invalid or expired token." });
+// --- PrayerRequests CRUD ---
+router.get("/api/prayer-requests", requireAuth, async (req, res) => {
+  const data = await prisma.prayerRequest.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/prayer-requests", requireAuth, async (req, res) => {
+  const { title, content } = req.body;
+  const prayer = await prisma.prayerRequest.create({
+    data: { title, content, userId: req.user.id }
+  });
+  res.json(prayer);
+});
+router.put("/api/prayer-requests/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  const prayer = await prisma.prayerRequest.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { title, content }
+  });
+  res.json(prayer);
+});
+router.delete("/api/prayer-requests/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.prayerRequest.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-    res.json({ message: "You are authenticated!", user });
+// --- Events CRUD ---
+router.get("/api/events", requireAuth, async (req, res) => {
+  const data = await prisma.event.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/events", requireAuth, async (req, res) => {
+  const { title, date, location, details } = req.body;
+  const event = await prisma.event.create({
+    data: { title, date: new Date(date), location, details, userId: req.user.id }
   });
+  res.json(event);
+});
+router.put("/api/events/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { title, date, location, details } = req.body;
+  const event = await prisma.event.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { title, date: new Date(date), location, details }
+  });
+  res.json(event);
+});
+router.delete("/api/events/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.event.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-  // --- Prayer Requests ---
-  app.get("/api/prayer-requests", async (_req, res) => {
-    try {
-      const data = storage.getAllPrayerRequests();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch prayer requests" });
-    }
+// --- Sermons CRUD ---
+router.get("/api/sermons", requireAuth, async (req, res) => {
+  const data = await prisma.sermon.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/sermons", requireAuth, async (req, res) => {
+  const { title, date, scripture, outline } = req.body;
+  const sermon = await prisma.sermon.create({
+    data: { title, date: new Date(date), scripture, outline, userId: req.user.id }
   });
-  app.get("/api/prayer-requests/:id", async (req, res) => {
-    try {
-      const data = storage.getPrayerRequestById(Number(req.params.id));
-      if (!data) return notFound(res, "Prayer request");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch prayer request" });
-    }
+  res.json(sermon);
+});
+router.put("/api/sermons/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { title, date, scripture, outline } = req.body;
+  const sermon = await prisma.sermon.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { title, date: new Date(date), scripture, outline }
   });
-  app.post("/api/prayer-requests", async (req, res) => {
-    try {
-      const input = insertPrayerRequestSchema.parse(req.body);
-      const result = storage.createPrayerRequest(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add prayer request" });
-    }
-  });
-  app.put("/api/prayer-requests/:id", async (req, res) => {
-    try {
-      const input = insertPrayerRequestSchema.parse(req.body);
-      const result = storage.updatePrayerRequest(Number(req.params.id), input);
-      if (!result) return notFound(res, "Prayer request");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update prayer request" });
-    }
-  });
-  app.delete("/api/prayer-requests/:id", async (req, res) => {
-    try {
-      const result = storage.deletePrayerRequest(Number(req.params.id));
-      if (!result) return notFound(res, "Prayer request");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete prayer request" });
-    }
-  });
+  res.json(sermon);
+});
+router.delete("/api/sermons/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.sermon.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-  // --- Events ---
-  app.get("/api/events", async (_req, res) => {
-    try {
-      const data = storage.getAllEvents();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch events" });
-    }
+// --- Resources CRUD ---
+router.get("/api/resources", requireAuth, async (req, res) => {
+  const data = await prisma.resource.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/resources", requireAuth, async (req, res) => {
+  const { title, description, type, url } = req.body;
+  const resource = await prisma.resource.create({
+    data: { title, description, type, url, userId: req.user.id }
   });
-  app.get("/api/events/:id", async (req, res) => {
-    try {
-      const data = storage.getEventById(Number(req.params.id));
-      if (!data) return notFound(res, "Event");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch event" });
-    }
+  res.json(resource);
+});
+router.put("/api/resources/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, type, url } = req.body;
+  const resource = await prisma.resource.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { title, description, type, url }
   });
-  app.post("/api/events", async (req, res) => {
-    try {
-      const input = insertEventSchema.parse(req.body);
-      const result = storage.createEvent(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add event" });
-    }
-  });
-  app.put("/api/events/:id", async (req, res) => {
-    try {
-      const input = insertEventSchema.parse(req.body);
-      const result = storage.updateEvent(Number(req.params.id), input);
-      if (!result) return notFound(res, "Event");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update event" });
-    }
-  });
-  app.delete("/api/events/:id", async (req, res) => {
-    try {
-      const result = storage.deleteEvent(Number(req.params.id));
-      if (!result) return notFound(res, "Event");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete event" });
-    }
-  });
+  res.json(resource);
+});
+router.delete("/api/resources/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.resource.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-  // --- Sermons ---
-  app.get("/api/sermons", async (_req, res) => {
-    try {
-      const data = storage.getAllSermons();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch sermons" });
-    }
+// --- TeamMembers CRUD ---
+router.get("/api/team-members", requireAuth, async (req, res) => {
+  const data = await prisma.teamMember.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/team-members", requireAuth, async (req, res) => {
+  const { name, position, image } = req.body;
+  const member = await prisma.teamMember.create({
+    data: { name, position, image, userId: req.user.id }
   });
-  app.get("/api/sermons/:id", async (req, res) => {
-    try {
-      const data = storage.getSermonById(Number(req.params.id));
-      if (!data) return notFound(res, "Sermon");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch sermon" });
-    }
+  res.json(member);
+});
+router.put("/api/team-members/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { name, position, image } = req.body;
+  const member = await prisma.teamMember.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { name, position, image }
   });
-  app.post("/api/sermons", async (req, res) => {
-    try {
-      const input = insertSermonSchema.parse(req.body);
-      const result = storage.createSermon(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add sermon" });
-    }
-  });
-  app.put("/api/sermons/:id", async (req, res) => {
-    try {
-      const input = insertSermonSchema.parse(req.body);
-      const result = storage.updateSermon(Number(req.params.id), input);
-      if (!result) return notFound(res, "Sermon");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update sermon" });
-    }
-  });
-  app.delete("/api/sermons/:id", async (req, res) => {
-    try {
-      const result = storage.deleteSermon(Number(req.params.id));
-      if (!result) return notFound(res, "Sermon");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete sermon" });
-    }
-  });
+  res.json(member);
+});
+router.delete("/api/team-members/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.teamMember.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-  // --- Team Members ---
-  app.get("/api/team-members", async (_req, res) => {
-    try {
-      const data = storage.getAllTeamMembers();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch team members" });
-    }
+// --- Tasks CRUD ---
+router.get("/api/tasks", requireAuth, async (req, res) => {
+  const data = await prisma.task.findMany({ where: { userId: req.user.id } });
+  res.json(data);
+});
+router.post("/api/tasks", requireAuth, async (req, res) => {
+  const { title, description, dueDate, priority, completed } = req.body;
+  const task = await prisma.task.create({
+    data: { title, description, dueDate: dueDate ? new Date(dueDate) : null, priority, completed: !!completed, userId: req.user.id }
   });
-  app.get("/api/team-members/:id", async (req, res) => {
-    try {
-      const data = storage.getTeamMemberById(Number(req.params.id));
-      if (!data) return notFound(res, "Team member");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch team member" });
-    }
+  res.json(task);
+});
+router.put("/api/tasks/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, dueDate, priority, completed } = req.body;
+  const task = await prisma.task.updateMany({
+    where: { id: Number(id), userId: req.user.id },
+    data: { title, description, dueDate: dueDate ? new Date(dueDate) : null, priority, completed: !!completed }
   });
-  app.post("/api/team-members", async (req, res) => {
-    try {
-      const input = insertTeamMemberSchema.parse(req.body);
-      const result = storage.createTeamMember(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add team member" });
-    }
-  });
-  app.put("/api/team-members/:id", async (req, res) => {
-    try {
-      const input = insertTeamMemberSchema.parse(req.body);
-      const result = storage.updateTeamMember(Number(req.params.id), input);
-      if (!result) return notFound(res, "Team member");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update team member" });
-    }
-  });
-  app.delete("/api/team-members/:id", async (req, res) => {
-    try {
-      const result = storage.deleteTeamMember(Number(req.params.id));
-      if (!result) return notFound(res, "Team member");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete team member" });
-    }
-  });
+  res.json(task);
+});
+router.delete("/api/tasks/:id", requireAuth, async (req, res) => {
+  const { id } = req.params;
+  await prisma.task.deleteMany({ where: { id: Number(id), userId: req.user.id } });
+  res.json({ message: "Deleted" });
+});
 
-  // --- Tasks ---
-  app.get("/api/tasks", async (_req, res) => {
-    try {
-      const data = storage.getAllTasks();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch tasks" });
-    }
-  });
-  app.get("/api/tasks/:id", async (req, res) => {
-    try {
-      const data = storage.getTaskById(Number(req.params.id));
-      if (!data) return notFound(res, "Task");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch task" });
-    }
-  });
-  app.post("/api/tasks", async (req, res) => {
-    try {
-      const input = insertTaskSchema.parse(req.body);
-      const result = storage.createTask(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add task" });
-    }
-  });
-  app.put("/api/tasks/:id", async (req, res) => {
-    try {
-      const input = insertTaskSchema.parse(req.body);
-      const result = storage.updateTask(Number(req.params.id), input);
-      if (!result) return notFound(res, "Task");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update task" });
-    }
-  });
-  app.delete("/api/tasks/:id", async (req, res) => {
-    try {
-      const result = storage.deleteTask(Number(req.params.id));
-      if (!result) return notFound(res, "Task");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete task" });
-    }
-  });
-
-  // --- Resources ---
-  app.get("/api/resources", async (_req, res) => {
-    try {
-      const data = storage.getAllResources();
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch resources" });
-    }
-  });
-  app.get("/api/resources/:id", async (req, res) => {
-    try {
-      const data = storage.getResourceById(Number(req.params.id));
-      if (!data) return notFound(res, "Resource");
-      res.json(data);
-    } catch {
-      res.status(500).json({ message: "Failed to fetch resource" });
-    }
-  });
-  app.post("/api/resources", async (req, res) => {
-    try {
-      const input = insertResourceSchema.parse(req.body);
-      const result = storage.createResource(input);
-      res.status(201).json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to add resource" });
-    }
-  });
-  app.put("/api/resources/:id", async (req, res) => {
-    try {
-      const input = insertResourceSchema.parse(req.body);
-      const result = storage.updateResource(Number(req.params.id), input);
-      if (!result) return notFound(res, "Resource");
-      res.json(result);
-    } catch (error) {
-      if (error instanceof z.ZodError) res.status(400).json({ message: error.errors });
-      else res.status(500).json({ message: "Failed to update resource" });
-    }
-  });
-  app.delete("/api/resources/:id", async (req, res) => {
-    try {
-      const result = storage.deleteResource(Number(req.params.id));
-      if (!result) return notFound(res, "Resource");
-      res.json({ success: true });
-    } catch {
-      res.status(500).json({ message: "Failed to delete resource" });
-    }
-  });
-
-  // --- Doctrine Comparison Endpoint ---
-  app.get("/api/compare-doctrines", async (req, res) => {
-    try {
-      const { doctrine1, doctrine2 } = req.query;
-      if (!doctrine1 || !doctrine2) {
-        return res.status(400).json({ message: "Please provide two doctrines to compare." });
-      }
-      const result = await DoctrineComparer.compare(doctrine1 as string, doctrine2 as string);
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to compare doctrines." });
-    }
-  });
-
-  // --- Interactive Apologetics Q&A Endpoint ---
-  app.post("/api/apologetics", async (req, res) => {
-    try {
-      const { question } = req.body;
-      if (!question) {
-        return res.status(400).json({ message: "No question provided." });
-      }
-      const answer = await ApologeticsResponder.getAnswer(question);
-      res.json({ answer });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get apologetics answer." });
-    }
-  });
-
-  // --- Theology Aggregator Route ---
-  app.get("/api/theology-aggregate", async (req: Request, res: Response) => {
-    try {
-      const query = (req.query.q as string) || "John 3:16";
-      const result = await TheologyAggregator.getAggregatedAnswer(query);
-      res.json({ result });
-    } catch {
-      res.status(500).json({ message: "Failed to aggregate theology data" });
-    }
-  });
-
-  return httpServer;
-}
+export default router;
