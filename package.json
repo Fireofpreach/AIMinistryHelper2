@@ -9,7 +9,7 @@
     "build": "npm run build:client && npm run build:shared && npm run build:server && cp -r shared dist/shared",
     "build:client": "vite build",
     "build:shared": "tsc -p shared/tsconfig.json",
-    "build:server": "tsc -p tsconfig.server.json",
+    "build:server": "tsc -p server/tsconfig.json",
     "start": "node dist/server/server/index.js"
   },
   "dependencies": {
