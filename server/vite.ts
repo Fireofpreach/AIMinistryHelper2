@@ -23,14 +23,16 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  // Dynamically import vite.config.js as ESM (make sure vite.config.js exists in your built output)
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("setupVite should not be called in production");
+  }
+  // Dynamically import vite.config.js as ESM (dev only)
   const viteConfigModule = await import("../vite.config.js");
   const viteConfig = viteConfigModule.default;
 
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    // allowedHosts: true, // REMOVED THIS LINE
   };
 
   const vite = await createViteServer({
@@ -60,7 +62,6 @@ export async function setupVite(app: Express, server: Server) {
         "index.html",
       );
 
-      // Always reload the index.html file from disk in case it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,

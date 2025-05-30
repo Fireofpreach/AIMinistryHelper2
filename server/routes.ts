@@ -1,7 +1,16 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { prisma } from "./prisma.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
+// Augment Express Request to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 const router = express.Router();
 
@@ -12,7 +21,7 @@ const generateToken = (payload: { id: number; email: string; role: string }) =>
   jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: "7d" });
 
 // Dummy auth middleware (replace with real one!)
-function requireAuth(req, res, next) {
+function requireAuth(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ message: "Missing auth header" });
   try {
@@ -25,7 +34,7 @@ function requireAuth(req, res, next) {
 }
 
 // --- Auth routes ---
-router.post("/api/register", async (req, res) => {
+router.post("/api/register", async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ message: "Email and password required." });
@@ -44,7 +53,7 @@ router.post("/api/register", async (req, res) => {
   res.json({ token, user });
 });
 
-router.post("/api/login", async (req, res) => {
+router.post("/api/login", async (req: Request, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ message: "Email and password required." });
@@ -62,18 +71,18 @@ router.post("/api/login", async (req, res) => {
 });
 
 // --- PrayerRequests CRUD ---
-router.get("/api/prayer-requests", requireAuth, async (req, res) => {
+router.get("/api/prayer-requests", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.prayerRequest.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/prayer-requests", requireAuth, async (req, res) => {
+router.post("/api/prayer-requests", requireAuth, async (req: Request, res: Response) => {
   const { title, content } = req.body;
   const prayer = await prisma.prayerRequest.create({
     data: { title, content, userId: req.user.id }
   });
   res.json(prayer);
 });
-router.put("/api/prayer-requests/:id", requireAuth, async (req, res) => {
+router.put("/api/prayer-requests/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, content } = req.body;
   const prayer = await prisma.prayerRequest.updateMany({
@@ -82,25 +91,25 @@ router.put("/api/prayer-requests/:id", requireAuth, async (req, res) => {
   });
   res.json(prayer);
 });
-router.delete("/api/prayer-requests/:id", requireAuth, async (req, res) => {
+router.delete("/api/prayer-requests/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.prayerRequest.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });
 });
 
 // --- Events CRUD ---
-router.get("/api/events", requireAuth, async (req, res) => {
+router.get("/api/events", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.event.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/events", requireAuth, async (req, res) => {
+router.post("/api/events", requireAuth, async (req: Request, res: Response) => {
   const { title, date, location, details } = req.body;
   const event = await prisma.event.create({
     data: { title, date: new Date(date), location, details, userId: req.user.id }
   });
   res.json(event);
 });
-router.put("/api/events/:id", requireAuth, async (req, res) => {
+router.put("/api/events/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, date, location, details } = req.body;
   const event = await prisma.event.updateMany({
@@ -109,25 +118,25 @@ router.put("/api/events/:id", requireAuth, async (req, res) => {
   });
   res.json(event);
 });
-router.delete("/api/events/:id", requireAuth, async (req, res) => {
+router.delete("/api/events/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.event.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });
 });
 
 // --- Sermons CRUD ---
-router.get("/api/sermons", requireAuth, async (req, res) => {
+router.get("/api/sermons", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.sermon.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/sermons", requireAuth, async (req, res) => {
+router.post("/api/sermons", requireAuth, async (req: Request, res: Response) => {
   const { title, date, scripture, outline } = req.body;
   const sermon = await prisma.sermon.create({
     data: { title, date: new Date(date), scripture, outline, userId: req.user.id }
   });
   res.json(sermon);
 });
-router.put("/api/sermons/:id", requireAuth, async (req, res) => {
+router.put("/api/sermons/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, date, scripture, outline } = req.body;
   const sermon = await prisma.sermon.updateMany({
@@ -136,25 +145,25 @@ router.put("/api/sermons/:id", requireAuth, async (req, res) => {
   });
   res.json(sermon);
 });
-router.delete("/api/sermons/:id", requireAuth, async (req, res) => {
+router.delete("/api/sermons/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.sermon.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });
 });
 
 // --- Resources CRUD ---
-router.get("/api/resources", requireAuth, async (req, res) => {
+router.get("/api/resources", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.resource.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/resources", requireAuth, async (req, res) => {
+router.post("/api/resources", requireAuth, async (req: Request, res: Response) => {
   const { title, description, type, url } = req.body;
   const resource = await prisma.resource.create({
     data: { title, description, type, url, userId: req.user.id }
   });
   res.json(resource);
 });
-router.put("/api/resources/:id", requireAuth, async (req, res) => {
+router.put("/api/resources/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, type, url } = req.body;
   const resource = await prisma.resource.updateMany({
@@ -163,25 +172,25 @@ router.put("/api/resources/:id", requireAuth, async (req, res) => {
   });
   res.json(resource);
 });
-router.delete("/api/resources/:id", requireAuth, async (req, res) => {
+router.delete("/api/resources/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.resource.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });
 });
 
 // --- TeamMembers CRUD ---
-router.get("/api/team-members", requireAuth, async (req, res) => {
+router.get("/api/team-members", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.teamMember.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/team-members", requireAuth, async (req, res) => {
+router.post("/api/team-members", requireAuth, async (req: Request, res: Response) => {
   const { name, position, image } = req.body;
   const member = await prisma.teamMember.create({
     data: { name, position, image, userId: req.user.id }
   });
   res.json(member);
 });
-router.put("/api/team-members/:id", requireAuth, async (req, res) => {
+router.put("/api/team-members/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name, position, image } = req.body;
   const member = await prisma.teamMember.updateMany({
@@ -190,25 +199,25 @@ router.put("/api/team-members/:id", requireAuth, async (req, res) => {
   });
   res.json(member);
 });
-router.delete("/api/team-members/:id", requireAuth, async (req, res) => {
+router.delete("/api/team-members/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.teamMember.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });
 });
 
 // --- Tasks CRUD ---
-router.get("/api/tasks", requireAuth, async (req, res) => {
+router.get("/api/tasks", requireAuth, async (req: Request, res: Response) => {
   const data = await prisma.task.findMany({ where: { userId: req.user.id } });
   res.json(data);
 });
-router.post("/api/tasks", requireAuth, async (req, res) => {
+router.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
   const { title, description, dueDate, priority, completed } = req.body;
   const task = await prisma.task.create({
     data: { title, description, dueDate: dueDate ? new Date(dueDate) : null, priority, completed: !!completed, userId: req.user.id }
   });
   res.json(task);
 });
-router.put("/api/tasks/:id", requireAuth, async (req, res) => {
+router.put("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, description, dueDate, priority, completed } = req.body;
   const task = await prisma.task.updateMany({
@@ -217,7 +226,7 @@ router.put("/api/tasks/:id", requireAuth, async (req, res) => {
   });
   res.json(task);
 });
-router.delete("/api/tasks/:id", requireAuth, async (req, res) => {
+router.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   await prisma.task.deleteMany({ where: { id: Number(id), userId: req.user.id } });
   res.json({ message: "Deleted" });

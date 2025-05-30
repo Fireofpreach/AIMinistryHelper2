@@ -1,13 +1,17 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/server",
-    "module": "esnext",
     "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "skipLibCheck": true
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "../dist/server",
+    "baseUrl": "..",
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
   },
-  "include": ["**/*", "../shared/**/*"]
+  "include": ["./**/*"]
 }

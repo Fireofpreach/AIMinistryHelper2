@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes.js";
+import registerRoutes from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 
@@ -39,7 +39,8 @@ async function main() {
       next();
     });
 
-    const server = await registerRoutes(app);
+    // Register routes as middleware (assuming registerRoutes is a middleware)
+    app.use(registerRoutes);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -51,23 +52,20 @@ async function main() {
       console.error(err);
     });
 
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      // Serve static files from the correct absolute path
-      const publicDir = path.join(process.cwd(), "dist/public");
-      app.use(express.static(publicDir));
-    }
-
     const port = 5000;
-    server.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
+    const server = app.listen(
+      port,
+      "0.0.0.0",
+      async () => {
         log(`serving on port ${port}`);
+
+        if (process.env.NODE_ENV !== "production") {
+          // Only use setupVite in development!
+          await setupVite(app, server);
+        } else {
+          // Serve static files and fallback for production builds
+          serveStatic(app);
+        }
       }
     );
   } catch (error) {

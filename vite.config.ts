@@ -24,6 +24,7 @@ export default (async () => {
   }
 
   return defineConfig({
+    base: "/", // <-- ADD THIS LINE
     plugins,
     resolve: {
       alias: {
