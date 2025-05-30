@@ -6,8 +6,9 @@
   "main": "dist/server/index.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"nodemon --watch server --ext ts,json --exec node --loader ts-node/esm server/index.ts\"",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:shared && npm run build:server && cp -r shared dist/shared",
     "build:client": "vite build",
+    "build:shared": "tsc -p shared/tsconfig.json",
     "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist/server/server/index.js"
   },
