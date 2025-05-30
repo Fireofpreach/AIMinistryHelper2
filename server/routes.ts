@@ -9,7 +9,7 @@ import {
   insertSermonSchema,
   insertTeamMemberSchema,
   insertResourceSchema,
-} from "@shared/schema";
+} from "../../shared/schema"; // <-- UPDATED: Use relative path!
 import { z } from "zod";
 import { TheologyAggregator } from "./theologyAggregator.js";
 import { DoctrineComparer } from "./doctrineComparer.js";
