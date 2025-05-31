@@ -6,7 +6,7 @@
   "main": "dist/server/server/index.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"nodemon --watch server --ext ts,json --exec node --loader ts-node/esm server/index.ts\"",
-    "build": "npm run build:client && npm run build:shared && npm run build:server && cpx \"shared/**/*\" dist/shared",
+    "build": "npm run build:client && npm run build:shared && npm run build:server && cpx \"shared/**/*\" dist/shared && cpx \"dist/public/**/*\" dist/server/server/public",
     "build:client": "vite build",
     "build:shared": "tsc -p shared/tsconfig.json",
     "build:server": "tsc -p server/tsconfig.json && tsc-alias -p server/tsconfig.json",
