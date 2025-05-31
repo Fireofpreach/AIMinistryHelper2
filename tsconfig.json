@@ -1,18 +1,35 @@
 {
+  "include": [
+    "client/src/**/*",
+    "shared/**/*",
+    "server/**/*",
+    "server/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts"
+  ],
   "compilerOptions": {
-    "target": "es2019",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "baseUrl": ".",
-    "paths": {
-      "@shared/schema": ["shared/schema"]
-    },
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
+    "module": "ESNext",
     "strict": true,
-    "skipLibCheck": true
-  },
-  "include": ["server", "shared/schema", "types"],
-  "exclude": ["node_modules", "dist"]
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./client/src/*"],
+      "@shared/*": ["./shared/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./server/types"
+    ]
+  }
 }
