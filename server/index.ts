@@ -9,6 +9,7 @@ async function main() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
 
+    // Logging middleware for /api requests
     app.use((req: Request, res: Response, next: NextFunction) => {
       const start = Date.now();
       const pathReq = req.path;
@@ -27,11 +28,9 @@ async function main() {
           if (capturedJsonResponse) {
             logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
           }
-
           if (logLine.length > 80) {
             logLine = logLine.slice(0, 79) + "…";
           }
-
           log(logLine);
         }
       });
@@ -39,18 +38,39 @@ async function main() {
       next();
     });
 
-    // Register routes as middleware (assuming registerRoutes is a middleware)
+    // Register your API routes here
     app.use(registerRoutes);
 
+    // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-
       res.status(status).json({ message });
-      // Log the error for visibility
       log(`Error: ${message}`);
       console.error(err);
     });
+
+    // List registered routes and middleware for debugging
+    console.log("=== All registered routes and middleware ===");
+    if (app._router && app._router.stack) {
+      app._router.stack.forEach((middleware: any) => {
+        if (middleware.route) {
+          const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+          console.log(`Route: ${methods} ${middleware.route.path}`);
+        } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
+          middleware.handle.stack.forEach((handler: any) => {
+            if (handler.route) {
+              const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+              console.log(`Router: ${methods} ${handler.route.path}`);
+            }
+          });
+        } else if (middleware.regexp && middleware.name !== "<anonymous>") {
+          console.log(`Middleware: ${middleware.name} ${middleware.regexp}`);
+        }
+      });
+    } else {
+      console.log("No app._router.stack found; is Express set up correctly?");
+    }
 
     const port = 5000;
     const server = app.listen(
@@ -59,11 +79,10 @@ async function main() {
       async () => {
         log(`serving on port ${port}`);
 
+        // Restore Vite/static serving as needed
         if (process.env.NODE_ENV !== "production") {
-          // Only use setupVite in development!
           await setupVite(app, server);
         } else {
-          // Serve static files and fallback for production builds
           serveStatic(app);
         }
       }
