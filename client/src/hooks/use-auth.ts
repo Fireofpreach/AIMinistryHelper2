@@ -41,11 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      
       // In a real app, you would validate with the backend
       const response = await apiRequest("POST", "/api/login", { username, password });
       const userData = await response.json();
-      
       setUser(userData);
       localStorage.setItem("shepherd-user", JSON.stringify(userData));
     } catch (err) {
