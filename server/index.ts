@@ -1,11 +1,7 @@
-import express from "express";
+import express, { type Request, Response, NextFunction } from "express";
+import * as registerRoutes from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
-import { fileURLToPath } from "url";
-import registerRoutes from "./routes.js";
-
-// These two lines are for ES Module path resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function main() {
   try {
@@ -13,21 +9,89 @@ async function main() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
 
-    // Serve static files from your frontend build
-    app.use(express.static(path.join(__dirname, "../client/dist")));
+    // Logging middleware for /api requests
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      const start = Date.now();
+      const pathReq = req.path;
+      let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-    // Mount your API and app routes BEFORE the React catch-all
-    app.use(registerRoutes);
+      const originalResJson = res.json;
+      res.json = function (bodyJson, ...args) {
+        capturedJsonResponse = bodyJson;
+        return originalResJson.apply(res, [bodyJson, ...args]);
+      };
 
-    // For React Router: serve index.html for any unknown route
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+      res.on("finish", () => {
+        const duration = Date.now() - start;
+        if (pathReq.startsWith("/api")) {
+          let logLine = `${req.method} ${pathReq} ${res.statusCode} in ${duration}ms`;
+          if (capturedJsonResponse) {
+            logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+          }
+          if (logLine.length > 80) {
+            logLine = logLine.slice(0, 79) + "…";
+          }
+          log(logLine);
+        }
+      });
+
+      next();
     });
+
+    // Register your API routes here - use ONLY .default for ESM builds!
+    app.use(registerRoutes.default);
+
+    // Health check/root route for Render
+    app.get("/", (_req, res) => {
+      res.send("Server is running!");
+    });
+
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      res.status(status).json({ message });
+      log(`Error: ${message}`);
+      console.error(err);
+    });
+
+    // List registered routes and middleware for debugging
+    console.log("=== All registered routes and middleware ===");
+    if ((app as any)._router && (app as any)._router.stack) {
+      (app as any)._router.stack.forEach((middleware: any) => {
+        if (middleware.route) {
+          const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+          console.log(`Route: ${methods} ${middleware.route.path}`);
+        } else if (middleware.name === 'router' && middleware.handle && middleware.handle.stack) {
+          middleware.handle.stack.forEach((handler: any) => {
+            if (handler.route) {
+              const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+              console.log(`Router: ${methods} ${handler.route.path}`);
+            }
+          });
+        } else if (middleware.regexp && middleware.name !== "<anonymous>") {
+          console.log(`Middleware: ${middleware.name} ${middleware.regexp}`);
+        }
+      });
+    } else {
+      console.log("No app._router.stack found; is Express set up correctly?");
+    }
 
     const port = process.env.PORT || 5000;
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`Serving on port ${port}`);
-    });
+    const server = app.listen(
+      port,
+      "0.0.0.0",
+      async () => {
+        log(`serving on port ${port}`);
+
+        // Restore Vite/static serving as needed
+        if (process.env.NODE_ENV !== "production") {
+          await setupVite(app, server);
+        } else {
+          serveStatic(app);
+        }
+      }
+    );
   } catch (error) {
     console.error("Fatal startup error:", error);
     process.exit(1);
