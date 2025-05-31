@@ -1,8 +1,11 @@
 import express from "express";
-import * as registerRoutes from "./routes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import registerRoutes from "./routes.js";
 
-console.log("registerRoutes =", registerRoutes);
-console.log("registerRoutes.default =", registerRoutes.default);
+// These two lines are for ES Module path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function main() {
   try {
@@ -10,22 +13,18 @@ async function main() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
 
-    app.use(registerRoutes.default);
+    // Serve static files from your frontend build
+    app.use(express.static(path.join(__dirname, "../client/dist")));
 
-    // List registered routes for debugging
-    console.log("=== All registered routes and middleware ===");
-    if ((app as any)._router && (app as any)._router.stack) {
-      (app as any)._router.stack.forEach((middleware: any) => {
-        if (middleware.route) {
-          const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
-          console.log(`Route: ${methods} ${middleware.route.path}`);
-        }
-      });
-    } else {
-      console.log("No app._router.stack found; is Express set up correctly?");
-    }
+    // Mount your API and app routes BEFORE the React catch-all
+    app.use(registerRoutes);
 
-    const port = 5000;
+    // For React Router: serve index.html for any unknown route
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+    });
+
+    const port = process.env.PORT || 5000;
     app.listen(port, "0.0.0.0", () => {
       console.log(`Serving on port ${port}`);
     });
