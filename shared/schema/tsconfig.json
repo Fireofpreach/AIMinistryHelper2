@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "outDir": "../../dist/shared/schema",
+    "rootDir": "."
+  },
+  "include": ["**/*.ts"]
+}

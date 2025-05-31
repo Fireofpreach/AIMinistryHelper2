@@ -1,7 +1,3 @@
-import fetch from "node-fetch";
-
-// REMOVED OpenAI and OpenRouter imports and setup
-
 export class TheologyAggregator {
   /**
    * Fetches a Bible verse using Bible-API.
@@ -11,8 +7,8 @@ export class TheologyAggregator {
     try {
       const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
       const data = await response.json();
-      if (data.text) {
-        return `Bible-API (${reference}):\n${data.text}`;
+      if (typeof data === "object" && data !== null && "text" in data) {
+        return `Bible-API (${reference}):\n${(data as any).text}`;
       }
       return `Bible-API: Verse not found for "${reference}".`;
     } catch (error) {
@@ -64,8 +60,12 @@ export class TheologyAggregator {
         return "AI: Error generating apologetics answer.";
       }
       const data = await response.json();
-      // The response is usually an array with 'generated_text'
-      const answer = data?.[0]?.generated_text || data?.generated_text || "No answer generated.";
+      let answer = "No answer generated.";
+      if (Array.isArray(data) && data[0]?.generated_text) {
+        answer = data[0].generated_text;
+      } else if (typeof data === "object" && data !== null && "generated_text" in data) {
+        answer = (data as any).generated_text;
+      }
       return answer;
     } catch (error) {
       console.error("Hugging Face general error:", error);
