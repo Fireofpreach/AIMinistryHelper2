@@ -29,7 +29,10 @@ export async function generateSermonIdeas(input: {
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    // TypeScript fix: check for null before parsing
+    const content = response.choices[0].message.content;
+    if (!content) throw new Error("No content in OpenAI response");
+    const result = JSON.parse(content);
     return result;
   } catch (error) {
     console.error("Error generating sermon ideas:", error);
@@ -58,7 +61,10 @@ export async function generateSermonOutline(input: {
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    // TypeScript fix: check for null before parsing
+    const content = response.choices[0].message.content;
+    if (!content) throw new Error("No content in OpenAI response");
+    const result = JSON.parse(content);
     return result;
   } catch (error) {
     console.error("Error generating sermon outline:", error);

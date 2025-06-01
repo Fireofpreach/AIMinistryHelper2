@@ -18,6 +18,7 @@ import BiblicalCounseling from "@/pages/biblical-counseling";
 import TheologicalComparison from "@/pages/theological-comparison";
 import Apologetics from "@/pages/apologetics";
 import UserManagement from "@/pages/user-management";
+import AmillennialismStudy from "@/pages/amillennialism-study"; // <-- Add this import
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/sermon-assistant" component={SermonAssistant} />
       <Route path="/theological-comparison" component={TheologicalComparison} />
+      <Route path="/amillennialism-study" component={AmillennialismStudy} /> {/* <-- Add this route */}
       <Route path="/apologetics" component={Apologetics} />
       <Route path="/biblical-counseling" component={BiblicalCounseling} />
       <Route path="/calendar" component={Calendar} />
@@ -35,7 +37,7 @@ function Router() {
       <Route path="/insights" component={Insights} />
       <Route path="/reports" component={Reports} />
       <Route path="/user-management" component={UserManagement} />
-      {/* Fallback to 404 */}
+      {/* 404 Fallback: Keep this last */}
       <Route component={NotFound} />
     </Switch>
   );

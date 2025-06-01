@@ -24,8 +24,9 @@ export default (async () => {
   }
 
   return defineConfig({
-    base: "/", // <-- ADD THIS LINE
+    base: "/",
     plugins,
+    root: resolve(__dirname, "client"),
     resolve: {
       alias: {
         "@": resolve(__dirname, "client/src"),
@@ -33,7 +34,6 @@ export default (async () => {
         "@assets": resolve(__dirname, "attached_assets"),
       },
     },
-    root: resolve(__dirname, "client"),
     build: {
       outDir: resolve(__dirname, "dist/public"),
       emptyOutDir: true,

@@ -10,17 +10,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format, isToday, isTomorrow, parseISO, startOfDay, isSameDay } from "date-fns";
+import { format, isToday, isTomorrow, isSameDay } from "date-fns";
 import { Event } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Calendar() {
   const { toast } = useToast();
   const userId = 1; // In a real app, this would come from authentication
-  
+
   // State
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showAddEventDialog, setShowAddEventDialog] = useState(false);
+  // Use a string for participants input, convert to array on submit
+  const [participantsInput, setParticipantsInput] = useState("");
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -30,20 +32,22 @@ export default function Calendar() {
     category: "",
     participants: [] as string[]
   });
-  
+
   // Fetch events
   const { data: events, isLoading: eventsLoading } = useQuery({
     queryKey: ['/api/events', userId],
     queryFn: () => fetch(`/api/events?userId=${userId}`).then(res => res.json())
   });
-  
+
   // Add event mutation
   const addEventMutation = useMutation({
     mutationFn: async (event: any) => {
       const response = await apiRequest("POST", "/api/events", {
         ...event,
         userId,
-        participants: event.participants.length ? event.participants.split(",").map((p: string) => p.trim()) : []
+        participants: participantsInput
+          ? participantsInput.split(",").map((p: string) => p.trim()).filter(Boolean)
+          : []
       });
       return response.json();
     },
@@ -65,7 +69,7 @@ export default function Calendar() {
       });
     }
   });
-  
+
   // Reset new event form
   const resetNewEvent = () => {
     setNewEvent({
@@ -77,18 +81,18 @@ export default function Calendar() {
       category: "",
       participants: []
     });
+    setParticipantsInput("");
   };
-  
+
   // Get events for the selected date
   const eventsForSelectedDate = React.useMemo(() => {
     if (!events || !selectedDate) return [];
-    
     return events.filter((event: Event) => {
       const eventDate = new Date(event.startTime);
       return isSameDay(eventDate, selectedDate);
     });
   }, [events, selectedDate]);
-  
+
   // Format date for display
   const formatDateHeader = (date: Date) => {
     if (isToday(date)) {
@@ -99,11 +103,11 @@ export default function Calendar() {
       return format(date, "EEEE, MMMM d, yyyy");
     }
   };
-  
+
   // Handle adding new event
   const handleAddEvent = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newEvent.title || !newEvent.startTime) {
       toast({
         title: "Missing information",
@@ -112,27 +116,30 @@ export default function Calendar() {
       });
       return;
     }
-    
+
     // Format dates correctly
     const startDateTime = selectedDate 
       ? new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${newEvent.startTime}`) 
       : new Date();
-    
+
     const endDateTime = newEvent.endTime && selectedDate
       ? new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${newEvent.endTime}`)
       : undefined;
-    
+
     addEventMutation.mutate({
       ...newEvent,
       startTime: startDateTime.toISOString(),
-      endTime: endDateTime ? endDateTime.toISOString() : undefined
+      endTime: endDateTime ? endDateTime.toISOString() : undefined,
+      participants: participantsInput
+        ? participantsInput.split(",").map((p: string) => p.trim()).filter(Boolean)
+        : []
     });
   };
-  
+
   // Handle date with events
   const dateHasEvents = (date: Date) => {
     if (!events) return false;
-    
+
     return events.some((event: Event) => {
       const eventDate = new Date(event.startTime);
       return isSameDay(eventDate, date);
@@ -360,7 +367,7 @@ export default function Calendar() {
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={newEvent.category}
-                  onValueChange={(value) => setNewEvent({ ...newEvent, category: value })}
+                  onValueChange={(value: string) => setNewEvent({ ...newEvent, category: value })}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select a category" />
@@ -379,8 +386,8 @@ export default function Calendar() {
                 <Label htmlFor="participants">Participants (comma separated)</Label>
                 <Input
                   id="participants"
-                  value={newEvent.participants}
-                  onChange={(e) => setNewEvent({ ...newEvent, participants: e.target.value })}
+                  value={participantsInput}
+                  onChange={(e) => setParticipantsInput(e.target.value)}
                   className="mt-1"
                   placeholder="e.g. John Smith, Jane Doe"
                 />

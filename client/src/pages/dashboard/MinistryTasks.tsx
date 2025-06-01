@@ -122,7 +122,8 @@ export default function MinistryTasks({ tasks, isLoading }: MinistryTasksProps) 
                 <Checkbox 
                   id={`task-${task.id}`}
                   checked={task.completed}
-                  onCheckedChange={() => toggleTaskCompletion(task)}
+                  // Explicitly type parameter for TS7006
+                  onCheckedChange={(_checked: boolean) => toggleTaskCompletion(task)}
                   className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500"
                 />
                 <div className="ml-3 flex-1">
@@ -164,7 +165,8 @@ export default function MinistryTasks({ tasks, isLoading }: MinistryTasksProps) 
                 <Checkbox 
                   id={`task-upcoming-${task.id}`}
                   checked={task.completed}
-                  onCheckedChange={() => toggleTaskCompletion(task)}
+                  // Explicitly type parameter for TS7006
+                  onCheckedChange={(_checked: boolean) => toggleTaskCompletion(task)}
                   className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-primary-600 focus:ring-primary-500"
                 />
                 <div className="ml-3">

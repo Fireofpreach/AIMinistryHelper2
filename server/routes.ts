@@ -33,6 +33,39 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-// --- Auth routes ---
-// ... (keep all your code as you posted)
+// --- Example Auth Routes ---
+
+// Register
+router.post("/api/register", async (req, res) => {
+  const { email, password } = req.body;
+  const hashed = await hashPassword(password);
+  try {
+    const user = await prisma.user.create({
+      data: { email, password: hashed, role: "user" },
+    });
+    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    res.json({ token });
+  } catch (e: any) {
+    res.status(400).json({ message: e.message });
+  }
+});
+
+// Login
+router.post("/api/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+  const valid = await comparePassword(password, user.password);
+  if (!valid) return res.status(401).json({ message: "Invalid credentials" });
+  const token = generateToken({ id: user.id, email: user.email, role: user.role });
+  res.json({ token });
+});
+
+// Protected route example
+router.get("/api/me", requireAuth, async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res.json({ id: user.id, email: user.email, role: user.role });
+});
+
 export default router;
