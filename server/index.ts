@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import * as registerRoutes from "./routes.js";
+import registerRoutes from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 
@@ -38,10 +38,14 @@ async function main() {
       next();
     });
 
-    // Register your API routes here - use ONLY .default for ESM builds!
-    app.use(registerRoutes.default);
+    // Debug: Log what we're mounting as router
+    console.log("registerRoutes:", registerRoutes);
+    console.log("typeof registerRoutes:", typeof registerRoutes);
 
-    // Health check/root route for Render
+    // Register your API routes here
+    app.use(registerRoutes);
+
+    // Health check/root route
     app.get("/", (_req, res) => {
       res.send("Server is running!");
     });
@@ -84,7 +88,8 @@ async function main() {
       async () => {
         log(`serving on port ${port}`);
 
-        // Restore Vite/static serving as needed
+        // --- VITE/STATIC SERVING BLOCK ---
+        // Now enabled (make sure vite.ts is fixed!)
         if (process.env.NODE_ENV !== "production") {
           await setupVite(app, server);
         } else {
